@@ -21,7 +21,6 @@
       height: auto;
       display: block;
     }
-    /* Optional: highlight areas on hover */
     area:hover {
       cursor: pointer;
     }
@@ -31,10 +30,28 @@
   <div class="map-container">
     <img src="island.png" alt="Island Map" usemap="#islandmap" />
     <map name="islandmap">
-      <area shape="rect" coords="50,50,150,150" href="area1.html" alt="Beach" />
-      <area shape="circle" coords="300,300,75" href="area2.html" alt="Forest" />
-      <area shape="poly" coords="400,100,500,120,480,200,380,180" href="area3.html" alt="Mountain" />
+      <!-- Profile area -->
+      <area shape="rect" coords="50,50,150,150" href="profile.html" alt="Profile" />
+
+      <!-- Shop area -->
+      <area shape="circle" coords="300,300,75" href="shop.html" alt="Shop" />
+
+      <!-- Popup area -->
+      <area shape="poly" coords="400,100,500,120,480,200,380,180" href="#" alt="Join Game" onclick="return joinGamePopup(event);" />
     </map>
   </div>
+
+  <script>
+    function joinGamePopup(event) {
+      event.preventDefault(); // Prevent the default link behavior
+      const join = confirm("Would you like to join the game?");
+      if (join) {
+        alert("Welcome to the game! (You can replace this with actual game loading code.)");
+        // Here you can redirect or load the game
+        // window.location.href = "game.html";
+      }
+      return false;
+    }
+  </script>
 </body>
 </html>
