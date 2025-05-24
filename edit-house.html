@@ -3,136 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>User Profile</title>
+  <title>Edit House</title>
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%;
+    body {
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
-    }
-    .profile-bg {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      background: url('house.png') center center no-repeat;
-      background-size: cover;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-start;
+      background: #f4f4f4;
+      margin: 0;
       padding: 20px;
-      box-sizing: border-box;
-    }
-    .info-box {
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 20px 25px;
-      border-radius: 12px;
-      width: 280px;
-      font-size: 16px;
-      user-select: none;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      min-height: 100vh;
     }
-    .info-box h2 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 24px;
+    h1 {
+      margin-bottom: 10px;
     }
-    .info-field {
-      margin: 4px 0;
+    #inventory, #placed {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      width: 320px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
     }
-    .label {
-      font-weight: bold;
+    #inventory h2, #placed h2 {
+      margin-top: 0;
     }
-    .nav-buttons {
+    .furniture-item {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
       justify-content: space-between;
+      margin: 6px 0;
     }
-    .nav-buttons button {
-      flex: 1 1 45%;
+    button.place-btn {
+      margin-left: 8px;
+      padding: 4px 10px;
+      cursor: pointer;
       background: #0077cc;
-      color: white;
       border: none;
-      padding: 10px 14px;
-      border-radius: 6px;
-      cursor: pointer;
+      color: white;
+      border-radius: 5px;
       font-weight: bold;
-      user-select: none;
       transition: background 0.3s ease;
     }
-    .nav-buttons button:disabled {
-      background: #444;
-      cursor: default;
+    button.place-btn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
     }
-    .nav-buttons button:hover:not(:disabled) {
-      background: #005fa3;
+    .placed-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
     }
-    #searchUser {
-      margin-top: 12px;
-      padding: 8px 12px;
-      border-radius: 6px;
+    button.remove-btn {
+      background: #cc4444;
       border: none;
-      font-size: 15px;
-      width: 100%;
-      box-sizing: border-box;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 3px 8px;
+      font-weight: bold;
+      transition: background 0.3s ease;
     }
-    .logout-btn {
-      margin-top: 15px;
-      width: 100%;
-      padding: 12px;
-      background: #ff4c4c;
+    button.remove-btn:hover {
+      background: #aa0000;
+    }
+    #back-btn {
+      padding: 10px 20px;
+      background: #555;
+      color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      color: white;
-      user-select: none;
       transition: background 0.3s ease;
     }
-    .logout-btn:hover {
-      background: #cc0000;
-    }
-    .edit-house-btn {
-      margin-top: 10px;
-      width: 100%;
-      padding: 12px;
-      background: #28a745;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      color: white;
-      user-select: none;
-      transition: background 0.3s ease;
-    }
-    .edit-house-btn:hover {
-      background: #1e7e34;
-    }
-    .inventory {
-      margin-top: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .inventory h3 {
-      margin: 0 0 8px 0;
-      font-weight: bold;
-    }
-    .inventory-item {
-      margin-left: 10px;
+    #back-btn:hover {
+      background: #333;
     }
   </style>
 </head>
 <body>
-  <div class="profile-bg">
-    <div class="info-box" id="info-box">
-      <!-- Info filled by JS -->
-    </div>
+  <h1>Edit Your House</h1>
+
+  <div id="inventory">
+    <h2>Furniture Inventory</h2>
+    <!-- Inventory items will be populated here -->
   </div>
+
+  <div id="placed">
+    <h2>Placed Furniture</h2>
+    <!-- Placed furniture will be listed here -->
+  </div>
+
+  <button id="back-btn">Back to Profile</button>
 
   <script>
     // Helper: pad numbers with leading zeros
@@ -140,131 +103,132 @@
       return num.toString().padStart(length, '0');
     }
 
-    // Load all users from localStorage
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('users')) || [];
-    }
-
-    // Get logged in user
+    // Get logged in user data from localStorage
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-
-    // Get profile ID from URL: e.g. profile.html?id=00001
-    const params = new URLSearchParams(window.location.search);
-    let profileId = params.get('id');
-
-    const users = getUsers();
-
-    // Map user indexes to profile IDs (starting at 1)
-    function userById(id) {
-      if (!id) return null;
-      let num = parseInt(id, 10);
-      if (isNaN(num) || num < 1 || num > users.length) return null;
-      return users[num - 1];
+    if (!loggedInUser || !loggedInUser.username) {
+      alert("You must be logged in to edit your house.");
+      window.location.href = "index.html";
     }
 
-    // If no ID provided, show logged-in user's profile
-    if (!profileId) {
-      if (loggedInUser && loggedInUser.username) {
-        const index = users.findIndex(u => u.username === loggedInUser.username);
-        if (index !== -1) profileId = padNumber(index + 1, 5);
-      }
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.username === loggedInUser.username);
+    if (userIndex === -1) {
+      alert("User not found.");
+      window.location.href = "index.html";
     }
+    const user = users[userIndex];
 
-    // Get user data for current profile view
-    const profileUser = userById(profileId);
+    // Ensure user has inventory object, if not create empty furniture inventory
+    if (!user.inventory) user.inventory = {};
+    if (!user.inventory.furniture) user.inventory.furniture = {};
 
-    // Reference to info box
-    const infoBox = document.getElementById('info-box');
+    // Initialize placedFurniture object (furniture name => count)
+    if (!user.placedFurniture) user.placedFurniture = {};
 
-    if (!profileUser) {
-      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>`;
-    } else {
-      // Check if this profile is the logged-in user
-      const isYou = loggedInUser && loggedInUser.username === profileUser.username;
+    // DOM refs
+    const inventoryDiv = document.getElementById('inventory');
+    const placedDiv = document.getElementById('placed');
+    const backBtn = document.getElementById('back-btn');
 
-      // Render furniture inventory list (basic)
-      let inventoryHTML = `<div class="inventory"><h3>Furniture Inventory:</h3>`;
-      if (profileUser.inventory && profileUser.inventory.furniture) {
-        const furniture = profileUser.inventory.furniture;
-        let hasFurniture = false;
-        for (const item in furniture) {
-          if (furniture[item] > 0) {
-            inventoryHTML += `<div class="inventory-item">${item}: ${furniture[item]}</div>`;
-            hasFurniture = true;
-          }
-        }
-        if (!hasFurniture) inventoryHTML += `<div class="inventory-item">No furniture owned.</div>`;
+    // Update UI for inventory and placed furniture
+    function render() {
+      // Clear existing
+      inventoryDiv.innerHTML = '<h2>Furniture Inventory</h2>';
+      placedDiv.innerHTML = '<h2>Placed Furniture</h2>';
+
+      // List inventory items with place buttons
+      const furnitureKeys = Object.keys(user.inventory.furniture);
+      if (furnitureKeys.length === 0) {
+        inventoryDiv.innerHTML += '<p>No furniture in inventory.</p>';
       } else {
-        inventoryHTML += `<div class="inventory-item">No furniture owned.</div>`;
-      }
-      inventoryHTML += `</div>`;
+        furnitureKeys.forEach(furn => {
+          const totalOwned = user.inventory.furniture[furn] || 0;
+          const placedCount = user.placedFurniture[furn] || 0;
+          const available = totalOwned - placedCount;
 
-      infoBox.innerHTML = `
-        <h2>${profileUser.username}</h2>
-        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender || 'N/A'}</div>
-        <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
-        <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'furniture-item';
 
-        <div class="nav-buttons">
-          <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
-          <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
-          ${isYou ? `<button class="edit-house-btn" id="edit-house-btn">Edit House 🏠</button>` : ''}
-        </div>
+          const label = document.createElement('span');
+          label.textContent = `${furn} (Owned: ${totalOwned}, Available: ${available})`;
 
-        <input type="text" id="searchUser" placeholder="Search username..." autocomplete="off">
+          const btn = document.createElement('button');
+          btn.className = 'place-btn';
+          btn.textContent = 'Place';
+          btn.disabled = available <= 0;
+          btn.onclick = () => {
+            placeFurniture(furn);
+          };
 
-        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
-
-        ${inventoryHTML}
-      `;
-
-      // Navigation buttons event handlers
-      document.getElementById('prev-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum > 1) {
-          const prevId = padNumber(currentNum - 1, 5);
-          window.location.href = `profile.html?id=${prevId}`;
-        }
-      });
-
-      document.getElementById('next-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum < users.length) {
-          const nextId = padNumber(currentNum + 1, 5);
-          window.location.href = `profile.html?id=${nextId}`;
-        }
-      });
-
-      // Search user input event
-      document.getElementById('searchUser').addEventListener('keyup', e => {
-        if (e.key === 'Enter') {
-          const val = e.target.value.trim().toLowerCase();
-          if (!val) return;
-          const foundUser = users.find(u => u.username.toLowerCase() === val);
-          if (foundUser) {
-            const foundIndex = users.indexOf(foundUser);
-            window.location.href = `profile.html?id=${padNumber(foundIndex + 1, 5)}`;
-          } else {
-            alert('User not found');
-          }
-        }
-      });
-
-      // Edit house button
-      if (isYou) {
-        document.getElementById('edit-house-btn').addEventListener('click', () => {
-          window.location.href = 'edit-house.html';
+          itemDiv.appendChild(label);
+          itemDiv.appendChild(btn);
+          inventoryDiv.appendChild(itemDiv);
         });
       }
 
-      // Logout button
-      if (isYou) {
-        document.getElementById('logout-btn').addEventListener('click', () => {
-          localStorage.removeItem('loggedInUser');
-          window.location.href = 'index.html';
+      // List placed furniture with remove buttons
+      const placedKeys = Object.keys(user.placedFurniture);
+      if (placedKeys.length === 0) {
+        placedDiv.innerHTML += '<p>No furniture placed.</p>';
+      } else {
+        placedKeys.forEach(furn => {
+          const count = user.placedFurniture[furn];
+          if (count > 0) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'placed-item';
+
+            const label = document.createElement('span');
+            label.textContent = `${furn}: ${count}`;
+
+            const btn = document.createElement('button');
+            btn.className = 'remove-btn';
+            btn.textContent = 'Remove';
+            btn.onclick = () => {
+              removeFurniture(furn);
+            };
+
+            itemDiv.appendChild(label);
+            itemDiv.appendChild(btn);
+            placedDiv.appendChild(itemDiv);
+          }
         });
       }
     }
+
+    function placeFurniture(furn) {
+      const totalOwned = user.inventory.furniture[furn] || 0;
+      const placedCount = user.placedFurniture[furn] || 0;
+      if (placedCount < totalOwned) {
+        user.placedFurniture[furn] = placedCount + 1;
+        saveUser();
+        render();
+      } else {
+        alert(`You cannot place more ${furn} than you own.`);
+      }
+    }
+
+    function removeFurniture(furn) {
+      const placedCount = user.placedFurniture[furn] || 0;
+      if (placedCount > 0) {
+        user.placedFurniture[furn] = placedCount - 1;
+        saveUser();
+        render();
+      }
+    }
+
+    function saveUser() {
+      users[userIndex] = user;
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    backBtn.addEventListener('click', () => {
+      // Redirect back to your profile page (with correct ID)
+      const profileId = padNumber(userIndex + 1, 5);
+      window.location.href = `profile.html?id=${profileId}`;
+    });
+
+    // Initial render
+    render();
   </script>
 </body>
 </html>
