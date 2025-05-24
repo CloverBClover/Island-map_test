@@ -57,9 +57,7 @@
   </style>
 </head>
 <body>
-  <div class="info-box" id="infoBox">
-    <!-- Dynamic content inserted here -->
-  </div>
+  <div class="info-box" id="infoBox"></div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
@@ -79,7 +77,7 @@
       window.location.href = "index.html";
     }
 
-    // Add defaults if missing (legacy profiles)
+    // Add defaults if missing
     if (!viewingUser.houseStyle) viewingUser.houseStyle = "house1";
     if (!viewingUser.inventory || !viewingUser.inventory.furniture) {
       viewingUser.inventory = {
@@ -90,20 +88,19 @@
       };
     }
 
-    // Update storage in case we fixed legacy user
+    // Save updates
     if (viewingUser.username === loggedInUser?.username) {
       localStorage.setItem("loggedInUser", JSON.stringify(viewingUser));
       allUsers = allUsers.map(u => u.username === viewingUser.username ? viewingUser : u);
       localStorage.setItem("users", JSON.stringify(allUsers));
     }
 
-    // Set background
+    // Set background image
     document.body.style.backgroundImage = `url('images/${viewingUser.houseStyle}.png')`;
 
     const isOwner = viewingUser.username === loggedInUser?.username;
     const infoBox = document.getElementById("infoBox");
 
-    // Create HTML for user info
     infoBox.innerHTML = `
       <h2>${viewingUser.username}</h2>
       <p>Gender: ${viewingUser.gender}</p>
@@ -112,6 +109,7 @@
       <div class="buttons">
         <button onclick="window.location.href='index.html'">🏝 Back to Island</button>
         ${isOwner ? `<button onclick="window.location.href='edit-house.html'">🏠 Edit House</button>` : ""}
+        ${isOwner ? `<button onclick="logout()">🚪 Log Out</button>` : ""}
         <select onchange="viewAnotherProfile(this)">
           <option value="">View Another Profile</option>
           ${allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join("")}
@@ -126,7 +124,12 @@
       }
     }
 
-    // Optional: Render furniture for this house
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "index.html";
+    }
+
+    // Optional: Render furniture
     if (viewingUser.inventory && viewingUser.inventory.furniture) {
       for (const [item, count] of Object.entries(viewingUser.inventory.furniture)) {
         for (let i = 0; i < count; i++) {
