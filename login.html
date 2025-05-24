@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login or Sign Up</title>
+  <title>Login or Create Account</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,189 +13,187 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+      padding: 20px;
     }
     .container {
       background: white;
+      max-width: 400px;
+      width: 100%;
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      width: 320px;
     }
     h2 {
       margin-top: 0;
       text-align: center;
     }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
     label {
-      display: block;
-      margin-top: 15px;
+      margin: 10px 0 5px;
       font-weight: bold;
     }
-    input, select {
-      width: 100%;
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select {
       padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border-radius: 4px;
+      font-size: 16px;
+      border-radius: 6px;
       border: 1px solid #ccc;
     }
     button {
       margin-top: 20px;
-      width: 100%;
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
+      background: #0077cc;
+      color: white;
       border: none;
       border-radius: 6px;
-      background-color: #007bff;
-      color: white;
       cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
-    }
-    .switch-mode {
-      margin-top: 15px;
-      text-align: center;
-      cursor: pointer;
-      color: #007bff;
-      user-select: none;
+      background: #005fa3;
     }
     .error {
       color: red;
       margin-top: 10px;
       text-align: center;
     }
+    .toggle-link {
+      margin-top: 20px;
+      text-align: center;
+      color: #0077cc;
+      cursor: pointer;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2 id="form-title">Login</h2>
-    <form id="auth-form">
-      <label for="username">Username</label>
-      <input type="text" id="username" required />
+    <h2 id="form-title">Log In</h2>
 
-      <label for="email" id="email-label" style="display:none;">Email</label>
-      <input type="email" id="email" style="display:none;" />
+    <form id="login-form">
+      <label for="login-username">Username:</label>
+      <input type="text" id="login-username" required />
 
-      <label for="password">Password</label>
-      <input type="password" id="password" required />
+      <label for="login-password">Password:</label>
+      <input type="password" id="login-password" required />
 
-      <label for="gender" id="gender-label" style="display:none;">Gender</label>
-      <select id="gender" style="display:none;">
-        <option value="" selected disabled>Select gender</option>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="other">Other</option>
+      <button type="submit">Log In</button>
+      <div class="error" id="login-error"></div>
+    </form>
+
+    <form id="signup-form" style="display:none;">
+      <label for="signup-username">Username:</label>
+      <input type="text" id="signup-username" required />
+
+      <label for="signup-email">Email:</label>
+      <input type="email" id="signup-email" required />
+
+      <label for="signup-password">Password:</label>
+      <input type="password" id="signup-password" required />
+
+      <label for="signup-gender">Gender:</label>
+      <select id="signup-gender" required>
+        <option value="" disabled selected>Select gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
       </select>
 
-      <button type="submit" id="submit-button">Login</button>
-      <div class="error" id="error-msg"></div>
+      <button type="submit">Create Account</button>
+      <div class="error" id="signup-error"></div>
     </form>
-    <div class="switch-mode" id="switch-mode">Don't have an account? Sign up</div>
+
+    <div class="toggle-link" id="toggle-form">Don't have an account? Create one</div>
   </div>
 
-<script>
-  let isLogin = true;
+  <script>
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const toggleLink = document.getElementById('toggle-form');
+    const formTitle = document.getElementById('form-title');
+    const loginError = document.getElementById('login-error');
+    const signupError = document.getElementById('signup-error');
 
-  const formTitle = document.getElementById('form-title');
-  const emailLabel = document.getElementById('email-label');
-  const emailInput = document.getElementById('email');
-  const genderLabel = document.getElementById('gender-label');
-  const genderSelect = document.getElementById('gender');
-  const submitButton = document.getElementById('submit-button');
-  const switchMode = document.getElementById('switch-mode');
-  const errorMsg = document.getElementById('error-msg');
-  const authForm = document.getElementById('auth-form');
+    // Toggle between login and signup forms
+    toggleLink.onclick = () => {
+      if (loginForm.style.display !== 'none') {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'flex';
+        formTitle.textContent = 'Create Account';
+        toggleLink.textContent = 'Already have an account? Log in';
+        loginError.textContent = '';
+        signupError.textContent = '';
+      } else {
+        loginForm.style.display = 'flex';
+        signupForm.style.display = 'none';
+        formTitle.textContent = 'Log In';
+        toggleLink.textContent = "Don't have an account? Create one";
+        loginError.textContent = '';
+        signupError.textContent = '';
+      }
+    };
 
-  function toggleMode() {
-    isLogin = !isLogin;
-    errorMsg.textContent = '';
-
-    if (isLogin) {
-      formTitle.textContent = 'Login';
-      emailLabel.style.display = 'none';
-      emailInput.style.display = 'none';
-      emailInput.required = false;
-      genderLabel.style.display = 'none';
-      genderSelect.style.display = 'none';
-      genderSelect.required = false;
-      submitButton.textContent = 'Login';
-      switchMode.textContent = "Don't have an account? Sign up";
-    } else {
-      formTitle.textContent = 'Sign Up';
-      emailLabel.style.display = 'block';
-      emailInput.style.display = 'block';
-      emailInput.required = true;
-      genderLabel.style.display = 'block';
-      genderSelect.style.display = 'block';
-      genderSelect.required = true;
-      submitButton.textContent = 'Sign Up';
-      switchMode.textContent = 'Already have an account? Login';
+    // Helpers to get users from localStorage (simple storage)
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('users')) || [];
     }
-  }
+    function saveUsers(users) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
 
-  switchMode.addEventListener('click', toggleMode);
+    // Handle login
+    loginForm.onsubmit = e => {
+      e.preventDefault();
+      loginError.textContent = '';
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
 
-  function getUsers() {
-    const users = localStorage.getItem('users');
-    return users ? JSON.parse(users) : [];
-  }
-
-  function saveUsers(users) {
-    localStorage.setItem('users', JSON.stringify(users));
-  }
-
-  authForm.addEventListener('submit', e => {
-    e.preventDefault();
-    errorMsg.textContent = '';
-
-    const username = document.getElementById('username').value.trim();
-    const email = emailInput.value.trim();
-    const password = document.getElementById('password').value;
-    const gender = genderSelect.value;
-
-    if (isLogin) {
       const users = getUsers();
       const user = users.find(u => u.username === username && u.password === password);
+
       if (user) {
         localStorage.setItem('loggedInUser', JSON.stringify(user));
-        window.location.href = `profile.html?id=${user.id}`;
+        window.location.href = 'profile.html';
       } else {
-        errorMsg.textContent = 'Invalid username or password.';
+        loginError.textContent = 'Invalid username or password.';
       }
-    } else {
+    };
+
+    // Handle signup
+    signupForm.onsubmit = e => {
+      e.preventDefault();
+      signupError.textContent = '';
+      const username = document.getElementById('signup-username').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const gender = document.getElementById('signup-gender').value;
+
       if (!username || !email || !password || !gender) {
-        errorMsg.textContent = 'Please fill in all fields.';
+        signupError.textContent = 'Please fill in all fields.';
         return;
       }
+
       const users = getUsers();
-      if (users.find(u => u.username === username)) {
-        errorMsg.textContent = 'Username already exists.';
+      if (users.some(u => u.username === username)) {
+        signupError.textContent = 'Username already taken.';
         return;
       }
-      if (users.find(u => u.email === email)) {
-        errorMsg.textContent = 'Email already registered.';
+      if (users.some(u => u.email === email)) {
+        signupError.textContent = 'Email already registered.';
         return;
       }
 
-      const newUser = {
-        username,
-        email,
-        password,
-        gender,
-        id: String(users.length).padStart(5, '0'),
-        inventory: { furniture: {} },
-        houseStyle: 'house1',
-        furniturePositions: {}
-      };
-
+      const newUser = { username, email, password, gender };
       users.push(newUser);
       saveUsers(users);
       localStorage.setItem('loggedInUser', JSON.stringify(newUser));
-      window.location.href = `profile.html?id=${newUser.id}`;
-    }
-  });
-
-  toggleMode();
-</script>
+      window.location.href = 'profile.html';
+    };
+  </script>
 </body>
 </html>
