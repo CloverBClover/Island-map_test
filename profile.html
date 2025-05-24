@@ -8,197 +8,172 @@
     body, html {
       margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
-      background: #121212;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
     .profile-bg {
       position: relative;
-      width: 360px;
-      height: 560px;
+      width: 100vw;
+      height: 100vh;
       background: url('house.png') center center no-repeat;
       background-size: cover;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.7);
       display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      padding: 24px;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 20px;
       box-sizing: border-box;
     }
     .info-box {
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 15px 20px;
       border-radius: 10px;
-      padding: 20px;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
+      width: 250px;
+      font-size: 16px;
       user-select: none;
     }
     .info-box h2 {
-      margin: 0 0 12px 0;
+      margin-top: 0;
       font-weight: 700;
-      font-size: 26px;
-      text-align: center;
-      letter-spacing: 1.1px;
+      font-size: 22px;
     }
     .info-field {
-      margin: 10px 0;
-      font-size: 16px;
+      margin: 8px 0;
     }
     .label {
       font-weight: bold;
-      margin-right: 8px;
     }
     .nav-buttons {
-      margin-top: auto;
+      margin-top: 15px;
       display: flex;
       justify-content: space-between;
-      gap: 12px;
     }
-    .nav-buttons button, .action-buttons button {
-      flex: 1;
+    .nav-buttons button {
       background: #0077cc;
       color: white;
       border: none;
-      padding: 12px 0;
-      border-radius: 8px;
+      padding: 8px 14px;
+      border-radius: 6px;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: bold;
       user-select: none;
       transition: background 0.3s ease;
     }
-    .nav-buttons button:disabled {
-      background: #444;
-      cursor: not-allowed;
-    }
-    .nav-buttons button:hover:not(:disabled) {
+    .nav-buttons button:hover {
       background: #005fa3;
     }
-    .action-buttons {
-      margin-top: 16px;
-      display: flex;
-      gap: 12px;
-    }
     .logout-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
       background: #ff4c4c;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+      user-select: none;
+      transition: background 0.3s ease;
     }
     .logout-btn:hover {
       background: #cc0000;
-    }
-    .back-island-btn {
-      background: #28a745;
-    }
-    .back-island-btn:hover {
-      background: #1e7e34;
-    }
-    .house-preview {
-      margin-top: 16px;
-      height: 140px;
-      border-radius: 8px;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      box-shadow: 0 0 8px rgba(0,0,0,0.5);
     }
   </style>
 </head>
 <body>
   <div class="profile-bg">
     <div class="info-box" id="info-box">
-      <!-- Filled by JS -->
+      <!-- Info filled by JS -->
     </div>
   </div>
 
   <script>
+    // Helper: pad numbers with leading zeros
     function padNumber(num, length) {
       return num.toString().padStart(length, '0');
     }
 
+    // Load all users from localStorage
     function getUsers() {
       return JSON.parse(localStorage.getItem('users')) || [];
     }
 
+    // Get logged in user
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    const users = getUsers();
 
-    // Get profile ID from URL (always 5 digit string)
+    // Get profile ID from URL: e.g. profile.html?id=00001
     const params = new URLSearchParams(window.location.search);
     let profileId = params.get('id');
 
-    // Ensure profileId always set, fallback to logged-in user ID
+    const users = getUsers();
+
+    // Map user indexes to profile IDs (starting at 1)
+    // We'll consider user #1 is at index 0, #2 at index 1, etc.
+    function userById(id) {
+      if (!id) return null;
+      let num = parseInt(id, 10);
+      if (isNaN(num) || num < 1 || num > users.length) return null;
+      return users[num - 1];
+    }
+
+    // If no ID provided, show logged-in user's profile
     if (!profileId) {
-      if (loggedInUser && loggedInUser.id) {
-        profileId = loggedInUser.id;
-        // Update URL without reload to keep consistent URL
-        history.replaceState(null, '', `profile.html?id=${profileId}`);
-      } else {
-        // No ID and no logged-in user
-        profileId = null;
+      if (loggedInUser && loggedInUser.username) {
+        // Find this user's index
+        const index = users.findIndex(u => u.username === loggedInUser.username);
+        if (index !== -1) profileId = padNumber(index + 1, 5);
+        else profileId = null;
       }
     }
 
-    // Find user by profileId (user.id should be 5-digit string)
-    function userById(id) {
-      if (!id) return null;
-      return users.find(u => u.id === id) || null;
-    }
-
+    // Get user data for current profile view
     const profileUser = userById(profileId);
+
+    // Reference to info box
     const infoBox = document.getElementById('info-box');
 
     if (!profileUser) {
       infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>`;
     } else {
+      // Check if this profile is the logged-in user
       const isYou = loggedInUser && loggedInUser.username === profileUser.username;
-      const currentIndex = users.findIndex(u => u.id === profileUser.id);
-      const prevUser = users[currentIndex - 1] || null;
-      const nextUser = users[currentIndex + 1] || null;
-
-      // House preview background (match edit-house styles)
-      const housePreviewStyle = profileUser.houseStyle ? `background-image: url('images/${profileUser.houseStyle}.png')` : '';
 
       infoBox.innerHTML = `
         <h2>${profileUser.username}</h2>
-        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender || 'Unknown'}</div>
-        <div class="info-field"><span class="label">Profile ID:</span> ${profileUser.id}</div>
+        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender}</div>
+        <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
         <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
 
-        <div class="house-preview" style="${housePreviewStyle}"></div>
-
         <div class="nav-buttons">
-          <button id="prev-btn" ${!prevUser ? 'disabled' : ''}>⬅ Prev</button>
-          <button id="next-btn" ${!nextUser ? 'disabled' : ''}>Next ➡</button>
+          <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
+          <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
         </div>
 
-        <div class="action-buttons">
-          ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
-          <button class="back-island-btn" id="back-island-btn">Back to Island</button>
-        </div>
+        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
       `;
 
-      // Button handlers
-      if (prevUser) {
-        document.getElementById('prev-btn').addEventListener('click', () => {
-          window.location.href = `profile.html?id=${prevUser.id}`;
-        });
-      }
-      if (nextUser) {
-        document.getElementById('next-btn').addEventListener('click', () => {
-          window.location.href = `profile.html?id=${nextUser.id}`;
-        });
-      }
+      // Navigation buttons event handlers
+      document.getElementById('prev-btn').addEventListener('click', () => {
+        const currentNum = parseInt(profileId, 10);
+        if (currentNum > 1) {
+          const prevId = padNumber(currentNum - 1, 5);
+          window.location.href = `profile.html?id=${prevId}`;
+        }
+      });
+
+      document.getElementById('next-btn').addEventListener('click', () => {
+        const currentNum = parseInt(profileId, 10);
+        if (currentNum < users.length) {
+          const nextId = padNumber(currentNum + 1, 5);
+          window.location.href = `profile.html?id=${nextId}`;
+        }
+      });
+
+      // Logout button
       if (isYou) {
         document.getElementById('logout-btn').addEventListener('click', () => {
           localStorage.removeItem('loggedInUser');
           window.location.href = 'index.html';
         });
       }
-      document.getElementById('back-island-btn').addEventListener('click', () => {
-        window.location.href = 'island.html';
-      });
     }
   </script>
 </body>
