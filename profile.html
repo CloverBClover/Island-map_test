@@ -2,185 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>User Profile</title>
+  <title>Profile</title>
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%;
+    body {
+      margin: 0;
       font-family: Arial, sans-serif;
-    }
-    .profile-bg {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      background: url('house.png') center center no-repeat;
+      color: white;
+      background-color: black;
       background-size: cover;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-start;
-      padding: 20px;
-      box-sizing: border-box;
+      background-position: center;
+      height: 100vh;
+      overflow: hidden;
     }
     .info-box {
+      position: absolute;
+      top: 20px;
+      left: 20px;
       background: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 15px 20px;
+      padding: 20px;
       border-radius: 10px;
-      width: 250px;
-      font-size: 16px;
-      user-select: none;
     }
-    .info-box h2 {
-      margin-top: 0;
-      font-weight: 700;
-      font-size: 22px;
+    .info-box h2, .info-box p {
+      margin: 5px 0;
     }
-    .info-field {
-      margin: 8px 0;
+    .buttons {
+      margin-top: 10px;
     }
-    .label {
-      font-weight: bold;
-    }
-    .nav-buttons {
-      margin-top: 15px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .nav-buttons button {
-      background: #0077cc;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      user-select: none;
-      transition: background 0.3s ease;
-    }
-    .nav-buttons button:hover {
-      background: #005fa3;
-    }
-    .logout-btn {
-      margin-top: 20px;
-      width: 100%;
+    .buttons button {
       padding: 10px;
-      background: #ff4c4c;
+      margin-right: 10px;
+      background: #00aaff;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
+      border-radius: 5px;
       color: white;
-      user-select: none;
-      transition: background 0.3s ease;
-    }
-    .logout-btn:hover {
-      background: #cc0000;
-    }
-    .back-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
-      background: #4caf50;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
       font-weight: bold;
-      color: white;
-      user-select: none;
-      transition: background 0.3s ease;
+      cursor: pointer;
     }
-    .back-btn:hover {
-      background: #357a38;
+    .buttons button:hover {
+      background: #0077aa;
+    }
+    .furniture-item {
+      position: absolute;
+      width: 60px;
     }
   </style>
 </head>
 <body>
-  <div class="profile-bg">
-    <div class="info-box" id="info-box">
-      <!-- Info filled by JS -->
-    </div>
+  <div class="info-box" id="infoBox">
+    <!-- User Info will go here -->
   </div>
 
   <script>
-    function padNumber(num, length) {
-      return num.toString().padStart(length, '0');
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUsername = urlParams.get("user");
+
+    const allUsers = JSON.parse(localStorage.getItem("users")) || [];
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+    let viewingUser = loggedInUser;
+
+    if (profileUsername && profileUsername !== loggedInUser?.username) {
+      const found = allUsers.find(u => u.username === profileUsername);
+      if (found) viewingUser = found;
     }
 
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('users')) || [];
+    if (!viewingUser) {
+      alert("No profile to show.");
+      window.location.href = "index.html";
     }
 
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    // Set background
+    document.body.style.backgroundImage = `url('images/${viewingUser.houseStyle || 'house1'}.png')`;
 
-    const params = new URLSearchParams(window.location.search);
-    let profileId = params.get('id');
+    const infoBox = document.getElementById("infoBox");
 
-    const users = getUsers();
+    const isOwner = viewingUser.username === loggedInUser?.username;
 
-    function userById(id) {
-      if (!id) return null;
-      let num = parseInt(id, 10);
-      if (isNaN(num) || num < 1 || num > users.length) return null;
-      return users[num - 1];
-    }
+    infoBox.innerHTML = `
+      <h2>${viewingUser.username}</h2>
+      <p>Gender: ${viewingUser.gender}</p>
+      <p>Profile ID: ${viewingUser.id || "00000"}</p>
+      <p>${isOwner ? "This is your profile." : "You are viewing someone else's profile."}</p>
 
-    if (!profileId) {
-      if (loggedInUser && loggedInUser.username) {
-        const index = users.findIndex(u => u.username === loggedInUser.username);
-        if (index !== -1) profileId = padNumber(index + 1, 5);
-        else profileId = null;
-      }
-    }
+      <div class="buttons">
+        <button onclick="window.location.href='index.html'">🏝 Back to Island</button>
+        ${isOwner ? `<button onclick="window.location.href='edit-house.html'">🏠 Edit House</button>` : ""}
+      </div>
+    `;
 
-    const profileUser = userById(profileId);
-
-    const infoBox = document.getElementById('info-box');
-
-    if (!profileUser) {
-      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>
-        <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>`;
-    } else {
-      const isYou = loggedInUser && loggedInUser.username === profileUser.username;
-
-      infoBox.innerHTML = `
-        <h2>${profileUser.username}</h2>
-        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender}</div>
-        <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
-        <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
-
-        <div class="nav-buttons">
-          <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
-          <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
-        </div>
-
-        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
-
-        <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>
-      `;
-
-      document.getElementById('prev-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum > 1) {
-          const prevId = padNumber(currentNum - 1, 5);
-          window.location.href = `profile.html?id=${prevId}`;
-        }
-      });
-
-      document.getElementById('next-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum < users.length) {
-          const nextId = padNumber(currentNum + 1, 5);
-          window.location.href = `profile.html?id=${nextId}`;
-        }
-      });
-
-      if (isYou) {
-        document.getElementById('logout-btn').addEventListener('click', () => {
-          localStorage.removeItem('loggedInUser');
-          window.location.href = 'index.html';
-        });
-      }
-    }
+    // OPTIONAL: Show placed furniture if you've added that functionality
+    // You could store furniture placements in the user object and loop through them here.
   </script>
 </body>
 </html>
