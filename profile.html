@@ -1,186 +1,672 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>User Profile</title>
-  <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%;
-      font-family: Arial, sans-serif;
-    }
-    .profile-bg {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      background: url('house.png') center center no-repeat;
-      background-size: cover;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-start;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    .info-box {
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 10px;
-      width: 250px;
-      font-size: 16px;
-      user-select: none;
-    }
-    .info-box h2 {
-      margin-top: 0;
-      font-weight: 700;
-      font-size: 22px;
-    }
-    .info-field {
-      margin: 8px 0;
-    }
-    .label {
-      font-weight: bold;
-    }
-    .nav-buttons {
-      margin-top: 15px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .nav-buttons button {
-      background: #0077cc;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      user-select: none;
-      transition: background 0.3s ease;
-    }
-    .nav-buttons button:hover {
-      background: #005fa3;
-    }
-    .logout-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
-      background: #ff4c4c;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      color: white;
-      user-select: none;
-      transition: background 0.3s ease;
-    }
-    .logout-btn:hover {
-      background: #cc0000;
-    }
-    .back-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
-      background: #4caf50;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      color: white;
-      user-select: none;
-      transition: background 0.3s ease;
-    }
-    .back-btn:hover {
-      background: #357a38;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>User Profile & House Editor</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: Arial, sans-serif;
+    background: #222;
+    color: white;
+  }
+  .container {
+    max-width: 900px;
+    margin: 10px auto;
+    padding: 0 20px 40px;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  .top-bar input[type="text"] {
+    padding: 6px 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+    width: 220px;
+  }
+  .top-bar button {
+    margin-left: 10px;
+    padding: 8px 14px;
+    background: #0077cc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  .top-bar button:hover {
+    background: #005fa3;
+  }
+  h2 {
+    margin: 0 0 10px 0;
+  }
+  .profile-info {
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.6);
+    padding: 15px 20px;
+    border-radius: 10px;
+  }
+  .info-field {
+    margin: 6px 0;
+  }
+  .label {
+    font-weight: bold;
+  }
+  .nav-buttons {
+    margin-top: 10px;
+  }
+  .nav-buttons button {
+    background: #0077cc;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    margin-right: 10px;
+    transition: background 0.3s ease;
+  }
+  .nav-buttons button:disabled {
+    background: #444;
+    cursor: default;
+  }
+  .nav-buttons button:hover:not(:disabled) {
+    background: #005fa3;
+  }
+  .logout-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background: #ff4c4c;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  .logout-btn:hover {
+    background: #cc0000;
+  }
+  .back-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background: #4caf50;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  .back-btn:hover {
+    background: #357a38;
+  }
+
+  /* House & Furniture editor */
+  #house-container {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    background-color: #333;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0,0,0,0.7);
+    user-select: none;
+  }
+  #house-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+  .furniture {
+    position: absolute;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+  }
+  .furniture img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    pointer-events: none;
+  }
+  .furniture.selected {
+    outline: 2px solid #00ffff;
+  }
+
+  /* Controls for scaling */
+  .scale-control {
+    position: absolute;
+    bottom: -20px;
+    right: 0;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Edit mode toggle */
+  #edit-mode-toggle {
+    margin: 10px auto 20px;
+    display: block;
+    padding: 10px 20px;
+    background: #0077cc;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  #edit-mode-toggle:hover {
+    background: #005fa3;
+  }
+
+  /* Inventory display */
+  #inventory {
+    max-width: 600px;
+    margin: 0 auto 20px;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-around;
+  }
+  .inventory-item {
+    color: white;
+    font-weight: bold;
+  }
+  .inventory-item span {
+    font-weight: normal;
+  }
+
+  /* Add furniture buttons */
+  #add-furniture-buttons {
+    max-width: 600px;
+    margin: 0 auto 10px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+  #add-furniture-buttons button {
+    background: #0077cc;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  #add-furniture-buttons button:disabled {
+    background: #444;
+    cursor: default;
+  }
+  #add-furniture-buttons button:hover:not(:disabled) {
+    background: #005fa3;
+  }
+</style>
 </head>
 <body>
-  <div class="profile-bg">
-    <div class="info-box" id="info-box">
-      <!-- Info filled by JS -->
+  <div class="container">
+
+    <div class="top-bar">
+      <div>
+        <input type="text" id="search-username" placeholder="Search username..." />
+        <button id="search-btn">Search</button>
+      </div>
+      <button id="edit-mode-toggle">Enter Edit House Mode</button>
     </div>
+
+    <div class="profile-info" id="profile-info">
+      <!-- Profile info fills here -->
+    </div>
+
+    <div id="house-container" style="display:none;">
+      <img id="house-img" src="" alt="House" />
+      <!-- Furniture items placed here -->
+    </div>
+
+    <div id="add-furniture-buttons" style="display:none;">
+      <button id="add-chair-btn">Add Chair</button>
+      <button id="add-tv-btn">Add TV</button>
+    </div>
+
+    <div id="inventory" style="display:none;">
+      Inventory: 
+      <div class="inventory-item">Chair: <span id="chair-count">0</span></div>
+      <div class="inventory-item">TV: <span id="tv-count">0</span></div>
+    </div>
+
+    <button class="back-btn" id="back-to-island">Back to Island Map</button>
+    <button class="logout-btn" id="logout-btn" style="display:none;">Log Out</button>
+
   </div>
 
-  <script>
-    function padNumber(num, length) {
-      return num.toString().padStart(length, '0');
+<script>
+  // Helpers
+  function padNumber(num, length) {
+    return num.toString().padStart(length, '0');
+  }
+  function getUsers() {
+    return JSON.parse(localStorage.getItem('users')) || [];
+  }
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  // --- Load logged in user and all users ---
+  let users = getUsers();
+  let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+  if (!loggedInUser) {
+    alert('You must be logged in to view profiles.');
+    window.location.href = 'login.html';
+  }
+
+  // Ensure every user has house data and inventory (init if missing)
+  function ensureUserHouseData(user) {
+    if (!user.house) {
+      user.house = {
+        houseImage: 'house1.png',
+        furniture: [], // {id, type, x, y, scale}
+        inventory: { chair1: 1, tv1: 1 }
+      };
     }
-
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('users')) || [];
+    if (!user.house.inventory) {
+      user.house.inventory = { chair1: 1, tv1: 1 };
     }
+  }
+  users.forEach(ensureUserHouseData);
 
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+  // Save users right away if any were missing house data/inventory
+  saveUsers(users);
 
-    const params = new URLSearchParams(window.location.search);
-    let profileId = params.get('id');
+  // Utility to get user by ID (index +1, zero-padded)
+  function userById(id) {
+    if (!id) return null;
+    let num = parseInt(id, 10);
+    if (isNaN(num) || num < 1 || num > users.length) return null;
+    return users[num - 1];
+  }
 
-    const users = getUsers();
+  // Parse profile id from URL or default to loggedInUser
+  const params = new URLSearchParams(window.location.search);
+  let profileId = params.get('id');
 
-    function userById(id) {
-      if (!id) return null;
-      let num = parseInt(id, 10);
-      if (isNaN(num) || num < 1 || num > users.length) return null;
-      return users[num - 1];
-    }
+  // If no profileId, set to logged in user index+1 padded
+  if (!profileId) {
+    const index = users.findIndex(u => u.username === loggedInUser.username);
+    profileId = index >= 0 ? padNumber(index + 1, 5) : null;
+  }
+  let profileUser = userById(profileId);
+  if (!profileUser) {
+    alert('Profile not found.');
+    window.location.href = 'index.html';
+  }
 
-    if (!profileId) {
-      if (loggedInUser && loggedInUser.username) {
-        const index = users.findIndex(u => u.username === loggedInUser.username);
-        if (index !== -1) profileId = padNumber(index + 1, 5);
-        else profileId = null;
+  // Is current profile user the logged-in user?
+  const isYou = profileUser.username === loggedInUser.username;
+
+  // Elements
+  const profileInfo = document.getElementById('profile-info');
+  const backToIslandBtn = document.getElementById('back-to-island');
+  const logoutBtn = document.getElementById('logout-btn');
+  const editModeToggle = document.getElementById('edit-mode-toggle');
+  const houseContainer = document.getElementById('house-container');
+  const houseImg = document.getElementById('house-img');
+  const addFurnitureButtons = document.getElementById('add-furniture-buttons');
+  const inventoryDisplay = document.getElementById('inventory');
+  const chairCountSpan = document.getElementById('chair-count');
+  const tvCountSpan = document.getElementById('tv-count');
+
+  // Navigation buttons
+  function createNavButtons() {
+    const navDiv = document.createElement('div');
+    navDiv.className = 'nav-buttons';
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '⬅ Prev';
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Next ➡';
+
+    const firstId = padNumber(1, 5);
+    const lastId = padNumber(users.length, 5);
+
+    prevBtn.disabled = profileId === firstId;
+    nextBtn.disabled = profileId === lastId;
+
+    prevBtn.onclick = () => {
+      if (!prevBtn.disabled) {
+        const prevId = padNumber(parseInt(profileId, 10) - 1, 5);
+        window.location.href = `profile.html?id=${prevId}`;
       }
-    }
+    };
+    nextBtn.onclick = () => {
+      if (!nextBtn.disabled) {
+        const nextId = padNumber(parseInt(profileId, 10) + 1, 5);
+        window.location.href = `profile.html?id=${nextId}`;
+      }
+    };
 
-    const profileUser = userById(profileId);
+    navDiv.appendChild(prevBtn);
+    navDiv.appendChild(nextBtn);
+    return navDiv;
+  }
 
-    const infoBox = document.getElementById('info-box');
+  // Display profile info
+  function renderProfileInfo() {
+    profileInfo.innerHTML = `
+      <h2>${profileUser.username}</h2>
+      <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender || 'N/A'}</div>
+      <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
+      <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
+    `;
+    profileInfo.appendChild(createNavButtons());
 
-    if (!profileUser) {
-      infoBox.innerHTML = <h2>Profile not found</h2><p>This user does not exist.</p>
-        <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>;
+    if (isYou) {
+      logoutBtn.style.display = 'block';
+      editModeToggle.style.display = 'inline-block';
+      inventoryDisplay.style.display = 'none';
+      addFurnitureButtons.style.display = 'none';
+      houseContainer.style.display = 'block';
+      renderHouseViewMode();
     } else {
-      const isYou = loggedInUser && loggedInUser.username === profileUser.username;
-
-      infoBox.innerHTML = 
-        <h2>${profileUser.username}</h2>
-        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender}</div>
-        <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
-        <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
-
-        <div class="nav-buttons">
-          <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
-          <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
-        </div>
-
-        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
-
-        <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>
-      ;
-
-      document.getElementById('prev-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum > 1) {
-          const prevId = padNumber(currentNum - 1, 5);
-          window.location.href = profile.html?id=${prevId};
-        }
-      });
-
-      document.getElementById('next-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum < users.length) {
-          const nextId = padNumber(currentNum + 1, 5);
-          window.location.href = profile.html?id=${nextId};
-        }
-      });
-
-      if (isYou) {
-        document.getElementById('logout-btn').addEventListener('click', () => {
-          localStorage.removeItem('loggedInUser');
-          window.location.href = 'index.html';
-        });
-      }
+      logoutBtn.style.display = 'none';
+      editModeToggle.style.display = 'none';
+      inventoryDisplay.style.display = 'none';
+      addFurnitureButtons.style.display = 'none';
+      houseContainer.style.display = 'block';
+      renderHouseViewMode();
     }
-  </script>
-</body>
-</html>
+  }
+
+  // Render house in "view mode" (non-editable)
+  function renderHouseViewMode() {
+    houseImg.src = 'images/' + (profileUser.house.houseImage || 'house1.png');
+    houseContainer.innerHTML = '';
+    houseContainer.appendChild(houseImg);
+    // Render furniture as static images, no interaction
+    profileUser.house.furniture.forEach((item) => {
+      const furnDiv = document.createElement('div');
+      furnDiv.className = 'furniture';
+      furnDiv.style.left = item.x + 'px';
+      furnDiv.style.top = item.y + 'px';
+      furnDiv.style.width = (100 * item.scale) + 'px';
+      furnDiv.style.height = 'auto';
+      furnDiv.style.position = 'absolute';
+
+      const img = document.createElement('img');
+      img.src = `images/furniture/${item.type}.png`;
+      furnDiv.appendChild(img);
+      houseContainer.appendChild(furnDiv);
+    });
+  }
+
+  // --- Search functionality ---
+  document.getElementById('search-btn').addEventListener('click', () => {
+    const query = document.getElementById('search-username').value.trim().toLowerCase();
+    if (!query) return alert('Please enter a username to search.');
+    const foundIndex = users.findIndex(u => u.username.toLowerCase() === query);
+    if (foundIndex === -1) return alert('User not found.');
+    window.location.href = `profile.html?id=${padNumber(foundIndex + 1, 5)}`;
+  });
+
+  // Back to island
+  backToIslandBtn.onclick = () => {
+    window.location.href = 'index.html';
+  };
+
+  // Logout
+  logoutBtn.onclick = () => {
+    localStorage.removeItem('loggedInUser');
+    window.location.href = 'index.html';
+  };
+
+  // --- Edit House Mode ---
+
+  let editMode = false;
+  let selectedFurniture = null;
+  let dragOffset = {x: 0, y: 0};
+  let scaleInput = null;
+
+  // Furniture types
+  const furnitureTypes = {
+    chair1: { name: 'Chair', img: 'chair1.png', defaultScale: 1, width: 100 },
+    tv1: { name: 'TV', img: 'tv1.png', defaultScale: 1, width: 150 }
+  };
+
+  function enableEditMode() {
+    editMode = true;
+    editModeToggle.textContent = 'Exit Edit House Mode';
+    inventoryDisplay.style.display = 'flex';
+    addFurnitureButtons.style.display = 'flex';
+    renderInventory();
+    renderHouseEditMode();
+  }
+
+  function disableEditMode() {
+    editMode = false;
+    editModeToggle.textContent = 'Enter Edit House Mode';
+    inventoryDisplay.style.display = 'none';
+    addFurnitureButtons.style.display = 'none';
+    selectedFurniture = null;
+    houseContainer.innerHTML = '';
+    houseContainer.appendChild(houseImg);
+    renderHouseViewMode();
+  }
+
+  editModeToggle.onclick = () => {
+    if (editMode) {
+      saveHouseData();
+      disableEditMode();
+    } else {
+      enableEditMode();
+    }
+  };
+
+  // Render inventory counts
+  function renderInventory() {
+    const inv = profileUser.house.inventory;
+    chairCountSpan.textContent = inv.chair1 || 0;
+    tvCountSpan.textContent = inv.tv1 || 0;
+
+    // Update add furniture buttons enabled status (disable if placed >= inventory)
+    const placedCounts = countPlacedFurniture();
+    document.getElementById('add-chair-btn').disabled = (placedCounts.chair1 >= inv.chair1);
+    document.getElementById('add-tv-btn').disabled = (placedCounts.tv1 >= inv.tv1);
+  }
+
+  // Count furniture placed currently
+  function countPlacedFurniture() {
+    const counts = { chair1: 0, tv1: 0 };
+    profileUser.house.furniture.forEach(f => {
+      if (counts[f.type] !== undefined) counts[f.type]++;
+    });
+    return counts;
+  }
+
+  // Render house & furniture with interaction in edit mode
+  function renderHouseEditMode() {
+    houseImg.src = 'images/' + (profileUser.house.houseImage || 'house1.png');
+    houseContainer.innerHTML = '';
+    houseContainer.appendChild(houseImg);
+
+    profileUser.house.furniture.forEach(item => {
+      createFurnitureElement(item);
+    });
+
+    // Add house image switch buttons
+    addHouseSwitchControls();
+  }
+
+  // Add house switch controls
+  function addHouseSwitchControls() {
+    const controls = document.createElement('div');
+    controls.style.position = 'absolute';
+    controls.style.top = '10px';
+    controls.style.left = '10px';
+    controls.style.background = 'rgba(0,0,0,0.6)';
+    controls.style.padding = '6px 10px';
+    controls.style.borderRadius = '6px';
+    controls.style.zIndex = '1000';
+    controls.style.color = 'white';
+    controls.style.userSelect = 'none';
+
+    const label = document.createElement('span');
+    label.textContent = 'House: ';
+    controls.appendChild(label);
+
+    ['house1.png', 'house2.png'].forEach(houseFile => {
+      const btn = document.createElement('button');
+      btn.textContent = houseFile.replace('.png', '');
+      btn.style.marginLeft = '6px';
+      btn.style.padding = '4px 10px';
+      btn.style.background = houseFile === profileUser.house.houseImage ? '#0077cc' : '#444';
+      btn.style.color = 'white';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '6px';
+      btn.style.cursor = 'pointer';
+      btn.onclick = () => {
+        profileUser.house.houseImage = houseFile;
+        saveUsers(users);
+        renderHouseEditMode();
+      };
+      controls.appendChild(btn);
+    });
+    houseContainer.appendChild(controls);
+  }
+
+  // Create a furniture DOM element with drag & scale
+  function createFurnitureElement(item) {
+    const div = document.createElement('div');
+    div.className = 'furniture';
+    div.style.left = item.x + 'px';
+    div.style.top = item.y + 'px';
+    div.style.width = (100 * item.scale) + 'px';
+    div.style.height = 'auto';
+    div.dataset.id = item.id;
+    div.dataset.type = item.type;
+
+    const img = document.createElement('img');
+    img.src = `images/furniture/${item.type}.png`;
+    div.appendChild(img);
+
+    // Add scale control box
+    const scaleCtrl = document.createElement('div');
+    scaleCtrl.className = 'scale-control';
+    scaleCtrl.textContent = `Scale: ${(item.scale*100).toFixed(0)}%`;
+    div.appendChild(scaleCtrl);
+
+    // Dragging handlers
+    div.onpointerdown = (e) => {
+      e.preventDefault();
+      selectedFurniture = item;
+      dragOffset.x = e.clientX - div.offsetLeft;
+      dragOffset.y = e.clientY - div.offsetTop;
+      div.classList.add('selected');
+      // Listen for pointer move/up on document
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
+    };
+
+    // Wheel to scale furniture
+    div.onwheel = (e) => {
+      if (!editMode) return;
+      e.preventDefault();
+      let delta = e.deltaY < 0 ? 0.05 : -0.05;
+      let newScale = Math.min(Math.max(0.3, item.scale + delta), 3);
+      item.scale = newScale;
+      div.style.width = (100 * newScale) + 'px';
+      scaleCtrl.textContent = `Scale: ${(newScale*100).toFixed(0)}%`;
+    };
+
+    houseContainer.appendChild(div);
+  }
+
+  // Pointer move handler (drag)
+  function onPointerMove(e) {
+    if (!selectedFurniture) return;
+    const furnDiv = [...houseContainer.children].find(c => c.classList.contains('furniture') && c.dataset.id == selectedFurniture.id);
+    if (!furnDiv) return;
+
+    let newX = e.clientX - dragOffset.x - houseContainer.getBoundingClientRect().left;
+    let newY = e.clientY - dragOffset.y - houseContainer.getBoundingClientRect().top;
+
+    // Keep furniture inside container bounds
+    newX = Math.min(Math.max(0, newX), houseContainer.clientWidth - furnDiv.clientWidth);
+    newY = Math.min(Math.max(0, newY), houseContainer.clientHeight - furnDiv.clientHeight);
+
+    furnDiv.style.left = newX + 'px';
+    furnDiv.style.top = newY + 'px';
+
+    selectedFurniture.x = newX;
+    selectedFurniture.y = newY;
+  }
+
+  // Pointer up handler (end drag)
+  function onPointerUp() {
+    if (selectedFurniture) {
+      const furnDiv = [...houseContainer.children].find(c => c.classList.contains('furniture') && c.dataset.id == selectedFurniture.id);
+      if (furnDiv) furnDiv.classList.remove('selected');
+    }
+    selectedFurniture = null;
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+  }
+
+  // Add furniture buttons handlers (only if user has inventory available)
+  document.getElementById('add-chair-btn').onclick = () => {
+    addFurniture('chair1');
+  };
+  document.getElementById('add-tv-btn').onclick = () => {
+    addFurniture('tv1');
+  };
+function addFurniture(type) {
+  const inv = profileUser.house.inventory || {};
+  if (!inv[type] || countPlacedFurniture()[type] >= inv[type]) {
+    alert('No more inventory left for this furniture.');
+    return;
+  }
+  // Add new furniture with default position and scale
+  const newItem = {
+    id: Date.now().toString(),
+    type,
+    x: 50,
+    y: 50,
+    scale: furnitureTypes[type].defaultScale
+  };
+  profileUser.house.furniture.push(newItem);
+  renderHouseEditMode();
+  renderInventory();
+}
+
+// Save updated user data to localStorage
+function saveUsers(users) {
+  localStorage.setItem('users', JSON.stringify(users));
+}
+
+function saveHouseData() {
+  saveUsers(users);
+  alert('House data saved!');
+}
