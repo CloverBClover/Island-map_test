@@ -13,13 +13,13 @@
       position: relative;
       width: 100vw;
       height: 100vh;
-      background: url('house.png') center center no-repeat;
-      background-size: cover;
+      background: #222;
       display: flex;
       justify-content: flex-end;
       align-items: flex-start;
       padding: 20px;
       box-sizing: border-box;
+      overflow-x: auto;
     }
     .info-box {
       background: rgba(0, 0, 0, 0.6);
@@ -46,7 +46,8 @@
       display: flex;
       justify-content: space-between;
     }
-    .nav-buttons button {
+    .nav-buttons button,
+    .logout-btn, .back-btn, .editor-button {
       background: #0077cc;
       color: white;
       border: none;
@@ -54,50 +55,38 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      user-select: none;
+      margin-top: 10px;
       transition: background 0.3s ease;
     }
-    .nav-buttons button:hover {
+    .nav-buttons button:hover,
+    .editor-button:hover {
       background: #005fa3;
     }
     .logout-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
       background: #ff4c4c;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      color: white;
-      user-select: none;
-      transition: background 0.3s ease;
     }
     .logout-btn:hover {
       background: #cc0000;
     }
     .back-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
       background: #4caf50;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      color: white;
-      user-select: none;
-      transition: background 0.3s ease;
     }
     .back-btn:hover {
       background: #357a38;
+    }
+    #house-canvas, #profile-canvas {
+      margin-top: 20px;
+      border: 2px solid #aaa;
     }
   </style>
 </head>
 <body>
   <div class="profile-bg">
-    <div class="info-box" id="info-box">
-      <!-- Info filled by JS -->
+    <div>
+      <div class="info-box" id="info-box"></div>
+      <div id="editor-controls" style="display:none;"></div>
+      <canvas id="house-canvas" width="800" height="600" style="display:none;"></canvas>
+      <canvas id="profile-canvas" width="800" height="600" style="display:none;"></canvas>
     </div>
   </div>
 
@@ -110,11 +99,13 @@
       return JSON.parse(localStorage.getItem('users')) || [];
     }
 
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    function saveUsers(users) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
 
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     const params = new URLSearchParams(window.location.search);
     let profileId = params.get('id');
-
     const users = getUsers();
 
     function userById(id) {
@@ -124,16 +115,15 @@
       return users[num - 1];
     }
 
-    if (!profileId) {
-      if (loggedInUser && loggedInUser.username) {
-        const index = users.findIndex(u => u.username === loggedInUser.username);
-        if (index !== -1) profileId = padNumber(index + 1, 5);
-        else profileId = null;
+    if (!profileId && loggedInUser && loggedInUser.username) {
+      const index = users.findIndex(u => u.username === loggedInUser.username);
+      if (index !== -1) {
+        profileId = padNumber(index + 1, 5);
+        window.location.href = `profile.html?id=${profileId}`;
       }
     }
 
     const profileUser = userById(profileId);
-
     const infoBox = document.getElementById('info-box');
 
     if (!profileUser) {
@@ -147,31 +137,31 @@
         <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender}</div>
         <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
         <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
+        <div class="info-field">
+          <input type="text" id="search-user" placeholder="Search username" style="width: 100%; padding: 6px; border-radius: 6px; border: none;" />
+          <button onclick="searchUser()" style="width: 100%; margin-top: 8px; background: #ffaa00;">Search</button>
+        </div>
 
         <div class="nav-buttons">
           <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
           <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
         </div>
 
-        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
-
+        ${isYou ? `
+          <button class="logout-btn" id="logout-btn">Log Out</button>
+          <button class="editor-button" onclick="editHouse()">Edit House</button>
+        ` : ''}
         <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>
       `;
 
       document.getElementById('prev-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum > 1) {
-          const prevId = padNumber(currentNum - 1, 5);
-          window.location.href = `profile.html?id=${prevId}`;
-        }
+        const prevId = padNumber(parseInt(profileId, 10) - 1, 5);
+        window.location.href = `profile.html?id=${prevId}`;
       });
 
       document.getElementById('next-btn').addEventListener('click', () => {
-        const currentNum = parseInt(profileId, 10);
-        if (currentNum < users.length) {
-          const nextId = padNumber(currentNum + 1, 5);
-          window.location.href = `profile.html?id=${nextId}`;
-        }
+        const nextId = padNumber(parseInt(profileId, 10) + 1, 5);
+        window.location.href = `profile.html?id=${nextId}`;
       });
 
       if (isYou) {
@@ -180,6 +170,129 @@
           window.location.href = 'index.html';
         });
       }
+
+      // Render static view
+      const canvas = document.getElementById('profile-canvas');
+      canvas.style.display = 'block';
+      const ctx = canvas.getContext('2d');
+      const bg = new Image();
+      bg.src = `images/${profileUser.houseBackground || 'house1.png'}`;
+      const furniture = profileUser.furniture || [];
+
+      bg.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+        furniture.forEach(item => {
+          const img = new Image();
+          img.src = `images/${item.img}`;
+          img.onload = () => ctx.drawImage(img, item.x, item.y, img.width * item.scale, img.height * item.scale);
+        });
+      };
+    }
+
+    function searchUser() {
+      const input = document.getElementById('search-user').value.trim().toLowerCase();
+      const match = users.findIndex(u => u.username.toLowerCase() === input);
+      if (match !== -1) {
+        const id = padNumber(match + 1, 5);
+        window.location.href = `profile.html?id=${id}`;
+      } else {
+        alert('User not found.');
+      }
+    }
+
+    // Editor
+    let canvasEditor = document.getElementById('house-canvas');
+    let ctxEditor = canvasEditor.getContext('2d');
+    let furnitureItems = [];
+
+    function editHouse() {
+      document.getElementById('editor-controls').style.display = 'block';
+      canvasEditor.style.display = 'block';
+      document.getElementById('profile-canvas').style.display = 'none';
+      furnitureItems = JSON.parse(JSON.stringify(profileUser.furniture || [
+        { img: 'furniture/chair1.png', x: 100, y: 400, scale: 1 },
+        { img: 'furniture/tv1.png', x: 400, y: 350, scale: 1 }
+      ]));
+
+      document.getElementById('editor-controls').innerHTML = `
+        <div style="margin-top:10px;">
+          <label style="color:white;">Select Background:</label>
+          <select id="bg-select">
+            <option value="house1.png">House 1</option>
+            <option value="house2.png">House 2</option>
+          </select>
+        </div>
+        <div style="margin-top:10px;">
+          <button onclick="addFurniture('chair1.png')">+ Chair</button>
+          <button onclick="addFurniture('tv1.png')">+ TV</button>
+        </div>
+        <button onclick="saveHouse()" style="background:#28a745;">Save House</button>
+      `;
+      document.getElementById('bg-select').value = loggedInUser.houseBackground || 'house1.png';
+
+      drawEditor();
+      enableDragResize();
+    }
+
+    function drawEditor() {
+      const bg = new Image();
+      bg.src = `images/${document.getElementById('bg-select').value}`;
+      bg.onload = () => {
+        ctxEditor.clearRect(0, 0, canvasEditor.width, canvasEditor.height);
+        ctxEditor.drawImage(bg, 0, 0, canvasEditor.width, canvasEditor.height);
+        furnitureItems.forEach(item => {
+          const img = new Image();
+          img.src = `images/${item.img}`;
+          img.onload = () => ctxEditor.drawImage(img, item.x, item.y, img.width * item.scale, img.height * item.scale);
+        });
+      };
+    }
+
+    function addFurniture(name) {
+      furnitureItems.push({ img: `furniture/${name}`, x: 100, y: 100, scale: 1 });
+      drawEditor();
+    }
+
+    function saveHouse() {
+      const background = document.getElementById('bg-select').value;
+      loggedInUser.houseBackground = background;
+      loggedInUser.furniture = furnitureItems;
+      localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+      const index = users.findIndex(u => u.username === loggedInUser.username);
+      users[index] = loggedInUser;
+      saveUsers(users);
+      alert("Saved! Reloading...");
+      window.location.href = `profile.html?id=${padNumber(index + 1, 5)}`;
+    }
+
+    function enableDragResize() {
+      let selected = null;
+      canvasEditor.onmousedown = (e) => {
+        const mx = e.offsetX;
+        const my = e.offsetY;
+        selected = furnitureItems.find(item => {
+          const img = new Image();
+          img.src = `images/${item.img}`;
+          return mx >= item.x && mx <= item.x + 50 &&
+                 my >= item.y && my <= item.y + 50;
+        });
+      };
+      canvasEditor.onmousemove = (e) => {
+        if (selected) {
+          selected.x = e.offsetX;
+          selected.y = e.offsetY;
+          drawEditor();
+        }
+      };
+      canvasEditor.onmouseup = () => { selected = null; };
+      canvasEditor.onwheel = (e) => {
+        if (selected) {
+          selected.scale += (e.deltaY < 0 ? 0.1 : -0.1);
+          selected.scale = Math.max(0.2, Math.min(3, selected.scale));
+          drawEditor();
+        }
+      };
     }
   </script>
 </body>
