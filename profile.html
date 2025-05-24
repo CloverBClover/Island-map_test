@@ -662,11 +662,18 @@ function addFurniture(type) {
 }
 
 // Save updated user data to localStorage
-function saveUsers(users) {
-  localStorage.setItem('users', JSON.stringify(users));
-}
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
 
-function saveHouseData() {
-  saveUsers(users);
-  alert('House data saved!');
-}
+  function saveHouseData() {
+    saveUsers(users);
+    alert('House data saved!');
+  }
+
+  // Initialize page
+  renderProfile();
+  renderHouse();
+</script>
+</body>
+</html>
