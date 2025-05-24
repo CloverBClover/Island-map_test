@@ -76,6 +76,22 @@
     .logout-btn:hover {
       background: #cc0000;
     }
+    .back-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background: #4caf50;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .back-btn:hover {
+      background: #357a38;
+    }
   </style>
 </head>
 <body>
@@ -86,27 +102,21 @@
   </div>
 
   <script>
-    // Helper: pad numbers with leading zeros
     function padNumber(num, length) {
       return num.toString().padStart(length, '0');
     }
 
-    // Load all users from localStorage
     function getUsers() {
       return JSON.parse(localStorage.getItem('users')) || [];
     }
 
-    // Get logged in user
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
 
-    // Get profile ID from URL: e.g. profile.html?id=00001
     const params = new URLSearchParams(window.location.search);
     let profileId = params.get('id');
 
     const users = getUsers();
 
-    // Map user indexes to profile IDs (starting at 1)
-    // We'll consider user #1 is at index 0, #2 at index 1, etc.
     function userById(id) {
       if (!id) return null;
       let num = parseInt(id, 10);
@@ -114,26 +124,22 @@
       return users[num - 1];
     }
 
-    // If no ID provided, show logged-in user's profile
     if (!profileId) {
       if (loggedInUser && loggedInUser.username) {
-        // Find this user's index
         const index = users.findIndex(u => u.username === loggedInUser.username);
         if (index !== -1) profileId = padNumber(index + 1, 5);
         else profileId = null;
       }
     }
 
-    // Get user data for current profile view
     const profileUser = userById(profileId);
 
-    // Reference to info box
     const infoBox = document.getElementById('info-box');
 
     if (!profileUser) {
-      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>`;
+      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>
+        <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>`;
     } else {
-      // Check if this profile is the logged-in user
       const isYou = loggedInUser && loggedInUser.username === profileUser.username;
 
       infoBox.innerHTML = `
@@ -148,9 +154,10 @@
         </div>
 
         ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
+
+        <button class="back-btn" onclick="window.location.href='index.html'">Back to Island</button>
       `;
 
-      // Navigation buttons event handlers
       document.getElementById('prev-btn').addEventListener('click', () => {
         const currentNum = parseInt(profileId, 10);
         if (currentNum > 1) {
@@ -167,7 +174,6 @@
         }
       });
 
-      // Logout button
       if (isYou) {
         document.getElementById('logout-btn').addEventListener('click', () => {
           localStorage.removeItem('loggedInUser');
