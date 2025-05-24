@@ -3,46 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Your Profile</title>
+  <title>User Profile</title>
   <style>
-    body {
+    body, html {
+      margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
-      background: #eef9ff;
-      padding: 40px;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    }
+    .profile-bg {
+      position: relative;
+      width: 100vw;
       height: 100vh;
+      background: url('house.png') center center no-repeat;
+      background-size: cover;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 20px;
+      box-sizing: border-box;
     }
-    .profile-container {
-      background: white;
-      max-width: 400px;
-      width: 100%;
-      padding: 30px;
+    .info-box {
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 15px 20px;
       border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      text-align: center;
+      width: 250px;
+      font-size: 16px;
+      user-select: none;
     }
-    h1 {
+    .info-box h2 {
       margin-top: 0;
+      font-weight: 700;
+      font-size: 22px;
     }
-    .field {
-      margin-bottom: 15px;
-      text-align: left;
+    .info-field {
+      margin: 8px 0;
     }
-    label {
+    .label {
       font-weight: bold;
     }
-    .logout-btn {
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background: #ff4c4c;
+    .nav-buttons {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .nav-buttons button {
+      background: #0077cc;
       color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .nav-buttons button:hover {
+      background: #005fa3;
+    }
+    .logout-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background: #ff4c4c;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
+      color: white;
+      user-select: none;
+      transition: background 0.3s ease;
     }
     .logout-btn:hover {
       background: #cc0000;
@@ -50,29 +79,101 @@
   </style>
 </head>
 <body>
-  <div class="profile-container" id="profile-container">
-    <!-- Profile info will load here -->
+  <div class="profile-bg">
+    <div class="info-box" id="info-box">
+      <!-- Info filled by JS -->
+    </div>
   </div>
 
   <script>
-    const container = document.getElementById('profile-container');
-    const user = JSON.parse(localStorage.getItem('loggedInUser'));
+    // Helper: pad numbers with leading zeros
+    function padNumber(num, length) {
+      return num.toString().padStart(length, '0');
+    }
 
-    if (!user) {
-      // Not logged in — redirect to login page
-      window.location.href = 'login.html';
+    // Load all users from localStorage
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('users')) || [];
+    }
+
+    // Get logged in user
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
+    // Get profile ID from URL: e.g. profile.html?id=00001
+    const params = new URLSearchParams(window.location.search);
+    let profileId = params.get('id');
+
+    const users = getUsers();
+
+    // Map user indexes to profile IDs (starting at 1)
+    // We'll consider user #1 is at index 0, #2 at index 1, etc.
+    function userById(id) {
+      if (!id) return null;
+      let num = parseInt(id, 10);
+      if (isNaN(num) || num < 1 || num > users.length) return null;
+      return users[num - 1];
+    }
+
+    // If no ID provided, show logged-in user's profile
+    if (!profileId) {
+      if (loggedInUser && loggedInUser.username) {
+        // Find this user's index
+        const index = users.findIndex(u => u.username === loggedInUser.username);
+        if (index !== -1) profileId = padNumber(index + 1, 5);
+        else profileId = null;
+      }
+    }
+
+    // Get user data for current profile view
+    const profileUser = userById(profileId);
+
+    // Reference to info box
+    const infoBox = document.getElementById('info-box');
+
+    if (!profileUser) {
+      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>`;
     } else {
-      container.innerHTML = `
-        <h1>Welcome, ${user.username}</h1>
-        <div class="field"><label>Email:</label> <span>${user.email}</span></div>
-        <div class="field"><label>Gender:</label> <span>${user.gender}</span></div>
-        <button class="logout-btn" id="logout-btn">Log Out</button>
+      // Check if this profile is the logged-in user
+      const isYou = loggedInUser && loggedInUser.username === profileUser.username;
+
+      infoBox.innerHTML = `
+        <h2>${profileUser.username}</h2>
+        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender}</div>
+        <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
+        <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
+
+        <div class="nav-buttons">
+          <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
+          <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
+        </div>
+
+        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
       `;
 
-      document.getElementById('logout-btn').addEventListener('click', () => {
-        localStorage.removeItem('loggedInUser');
-        window.location.href = 'index.html';
+      // Navigation buttons event handlers
+      document.getElementById('prev-btn').addEventListener('click', () => {
+        const currentNum = parseInt(profileId, 10);
+        if (currentNum > 1) {
+          const prevId = padNumber(currentNum - 1, 5);
+          window.location.href = `profile.html?id=${prevId}`;
+        }
       });
+
+      document.getElementById('next-btn').addEventListener('click', () => {
+        const currentNum = parseInt(profileId, 10);
+        if (currentNum < users.length) {
+          const nextId = padNumber(currentNum + 1, 5);
+          window.location.href = `profile.html?id=${nextId}`;
+        }
+      });
+
+      // Logout button
+      if (isYou) {
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          localStorage.removeItem('loggedInUser');
+          window.location.href = 'index.html';
+        });
+      }
     }
   </script>
 </body>
