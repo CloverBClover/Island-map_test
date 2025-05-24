@@ -1,9 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><title>Profile</title></head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef9ff;
+      padding: 40px;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .profile-container {
+      background: white;
+      max-width: 400px;
+      width: 100%;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    .field {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    label {
+      font-weight: bold;
+    }
+    .logout-btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #ff4c4c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: #cc0000;
+    }
+  </style>
+</head>
 <body>
-  <h1>Your Profile</h1>
-  <p>This is the profile area.</p>
-  <a href="index.html">Back to Island Map</a>
+  <div class="profile-container" id="profile-container">
+    <!-- Profile info will load here -->
+  </div>
+
+  <script>
+    const container = document.getElementById('profile-container');
+    const user = JSON.parse(localStorage.getItem('loggedInUser'));
+
+    if (!user) {
+      // Not logged in — redirect to login page
+      window.location.href = 'login.html';
+    } else {
+      container.innerHTML = `
+        <h1>Welcome, ${user.username}</h1>
+        <div class="field"><label>Email:</label> <span>${user.email}</span></div>
+        <div class="field"><label>Gender:</label> <span>${user.gender}</span></div>
+        <button class="logout-btn" id="logout-btn">Log Out</button>
+      `;
+
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('loggedInUser');
+        window.location.href = 'index.html';
+      });
+    }
+  </script>
 </body>
 </html>
