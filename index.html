@@ -1,14 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Island Map with Icons</title>
   <title>Island Map with Icons & User Status</title>
   <style>
     body {
       margin: 0;
-      background: #00a2e8;
-      display: flex;
+@@ -12,6 +12,7 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
@@ -16,34 +15,16 @@
     }
     .map-container {
       position: relative;
-      max-width: 800px;
-    }
-    .map-container img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    /* Icon styling */
-    .icon {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
+@@ -33,7 +34,7 @@
     .icon:hover {
       transform: scale(1.2);
     }
+    /* Positions of icons on the island (adjust as needed) */
     /* Positions of icons on the island */
     .icon-profile {
       top: 70px;
       left: 110px;
-    }
-    .icon-join {
-      top: 210px;
-      left: 310px;
-    }
-    .icon-shop {
+@@ -46,14 +47,31 @@
       top: 90px;
       left: 560px;
     }
@@ -71,18 +52,12 @@
     <img src="island.png" alt="Island Map" />
 
     <!-- Profile Icon -->
+    <a href="profile.html" class="icon icon-profile" title="Profile">
     <a href="#" class="icon icon-profile" title="Profile" onclick="goToProfile(event)">
       <img src="icons/profile-icon.png" alt="Profile Icon" />
     </a>
 
-    <!-- Shop Icon -->
-    <a href="shop.html" class="icon icon-shop" title="Shop">
-      <img src="icons/shop-icon.png" alt="Shop Icon" />
-    </a>
-
-    <!-- Join Game Icon -->
-    <a href="#" class="icon icon-join" title="Join Game" onclick="return joinGamePopup(event);">
-      <img src="icons/join-icon.png" alt="Join Game Icon" />
+@@ -68,7 +86,11 @@
     </a>
   </div>
 
@@ -94,8 +69,7 @@
     function joinGamePopup(event) {
       event.preventDefault();
       const join = confirm("Would you like to join the game?");
-      if (join) {
-        alert("Welcome to the game! (Replace with actual game launch.)");
+@@ -77,6 +99,32 @@
       }
       return false;
     }
@@ -116,7 +90,7 @@
       const userStatus = document.getElementById('user-status');
       const user = JSON.parse(localStorage.getItem('loggedInUser'));
       if (user && user.username) {
-        userStatus.textContent = Logged in as: ${user.username};
+        userStatus.textContent = `Logged in as: ${user.username}`;
       } else {
         userStatus.textContent = 'Not logged in';
       }
