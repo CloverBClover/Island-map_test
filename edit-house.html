@@ -3,121 +3,268 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Edit House</title>
+  <title>User Profile</title>
   <style>
-    body {
-      margin: 0;
+    body, html {
+      margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
-      background-color: #222;
-      color: white;
+      background: #f0f0f0;
     }
-    .container {
-      padding: 20px;
-    }
-    .house-preview {
+    .profile-bg {
       position: relative;
-      width: 600px;
-      height: 400px;
-      background-color: #333;
-      margin-bottom: 20px;
+      width: 100vw;
+      height: 100vh;
+      background: url('house.png') center center no-repeat;
       background-size: cover;
-      border: 2px solid #555;
-    }
-    .furniture {
-      position: absolute;
-      width: 60px;
-    }
-    .toolbar {
       display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 20px;
+      box-sizing: border-box;
     }
-    .toolbar button {
-      padding: 10px;
-      background: #555;
-      border: none;
-      border-radius: 6px;
+    .info-box {
+      background: rgba(0, 0, 0, 0.7);
       color: white;
-      cursor: pointer;
+      padding: 20px 25px;
+      border-radius: 12px;
+      width: 280px;
+      font-size: 16px;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .toolbar button:hover {
-      background: #777;
+    .info-box h2 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 24px;
+    }
+    .info-field {
+      margin: 4px 0;
+    }
+    .label {
+      font-weight: bold;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .nav-buttons button {
+      flex: 1 1 45%;
+      background: #0077cc;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .nav-buttons button:disabled {
+      background: #444;
+      cursor: default;
+    }
+    .nav-buttons button:hover:not(:disabled) {
+      background: #005fa3;
+    }
+    #searchUser {
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .logout-btn {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: #ff4c4c;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .logout-btn:hover {
+      background: #cc0000;
+    }
+    .edit-house-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .edit-house-btn:hover {
+      background: #1e7e34;
+    }
+    .inventory {
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .inventory h3 {
+      margin: 0 0 8px 0;
+      font-weight: bold;
+    }
+    .inventory-item {
+      margin-left: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Edit Your House</h1>
-
-    <div class="house-preview" id="housePreview"></div>
-
-    <h3>Choose House Style</h3>
-    <div class="toolbar">
-      <button onclick="setHouse('house1')">House 1</button>
-      <button onclick="setHouse('house2')">House 2</button>
+  <div class="profile-bg">
+    <div class="info-box" id="info-box">
+      <!-- Info filled by JS -->
     </div>
-
-    <h3>Your Furniture</h3>
-    <div class="toolbar" id="furnitureList">
-      <!-- Buttons added by JS -->
-    </div>
-
-    <button onclick="saveAndBack()">Save & Back to Profile</button>
   </div>
 
   <script>
-    let user = JSON.parse(localStorage.getItem('loggedInUser'));
-    let allUsers = JSON.parse(localStorage.getItem('users')) || [];
-
-    const preview = document.getElementById('housePreview');
-    const furnitureList = document.getElementById('furnitureList');
-
-    function setHouse(style) {
-      preview.style.backgroundImage = `url('images/${style}.png')`;
-      user.houseStyle = style;
+    // Helper: pad numbers with leading zeros
+    function padNumber(num, length) {
+      return num.toString().padStart(length, '0');
     }
 
-    function placeFurniture(item) {
-      const img = document.createElement('img');
-      img.src = `images/furniture/${item}.png`;
-      img.className = 'furniture';
-      img.style.top = `${Math.random() * 300}px`;
-      img.style.left = `${Math.random() * 500}px`;
-      preview.appendChild(img);
+    // Load all users from localStorage
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('users')) || [];
     }
 
-    function init() {
-      if (!user) {
-        alert("Not logged in.");
-        window.location.href = 'index.html';
-        return;
+    // Get logged in user
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
+    // Get profile ID from URL: e.g. profile.html?id=00001
+    const params = new URLSearchParams(window.location.search);
+    let profileId = params.get('id');
+
+    const users = getUsers();
+
+    // Map user indexes to profile IDs (starting at 1)
+    function userById(id) {
+      if (!id) return null;
+      let num = parseInt(id, 10);
+      if (isNaN(num) || num < 1 || num > users.length) return null;
+      return users[num - 1];
+    }
+
+    // If no ID provided, show logged-in user's profile
+    if (!profileId) {
+      if (loggedInUser && loggedInUser.username) {
+        const index = users.findIndex(u => u.username === loggedInUser.username);
+        if (index !== -1) profileId = padNumber(index + 1, 5);
       }
+    }
 
-      setHouse(user.houseStyle || 'house1');
+    // Get user data for current profile view
+    const profileUser = userById(profileId);
 
-      const inventory = user.inventory?.furniture || {};
-      for (const item in inventory) {
-        for (let i = 0; i < inventory[item]; i++) {
-          const btn = document.createElement('button');
-          btn.textContent = `Add ${item}`;
-          btn.onclick = () => placeFurniture(item);
-          furnitureList.appendChild(btn);
+    // Reference to info box
+    const infoBox = document.getElementById('info-box');
+
+    if (!profileUser) {
+      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>`;
+    } else {
+      // Check if this profile is the logged-in user
+      const isYou = loggedInUser && loggedInUser.username === profileUser.username;
+
+      // Render furniture inventory list (basic)
+      let inventoryHTML = `<div class="inventory"><h3>Furniture Inventory:</h3>`;
+      if (profileUser.inventory && profileUser.inventory.furniture) {
+        const furniture = profileUser.inventory.furniture;
+        let hasFurniture = false;
+        for (const item in furniture) {
+          if (furniture[item] > 0) {
+            inventoryHTML += `<div class="inventory-item">${item}: ${furniture[item]}</div>`;
+            hasFurniture = true;
+          }
         }
+        if (!hasFurniture) inventoryHTML += `<div class="inventory-item">No furniture owned.</div>`;
+      } else {
+        inventoryHTML += `<div class="inventory-item">No furniture owned.</div>`;
+      }
+      inventoryHTML += `</div>`;
+
+      infoBox.innerHTML = `
+        <h2>${profileUser.username}</h2>
+        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender || 'N/A'}</div>
+        <div class="info-field"><span class="label">Profile ID:</span> ${padNumber(users.indexOf(profileUser) + 1, 5)}</div>
+        <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
+
+        <div class="nav-buttons">
+          <button id="prev-btn" ${profileId === '00001' ? 'disabled' : ''}>⬅ Prev</button>
+          <button id="next-btn" ${profileId === padNumber(users.length,5) ? 'disabled' : ''}>Next ➡</button>
+          ${isYou ? `<button class="edit-house-btn" id="edit-house-btn">Edit House 🏠</button>` : ''}
+        </div>
+
+        <input type="text" id="searchUser" placeholder="Search username..." autocomplete="off">
+
+        ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
+
+        ${inventoryHTML}
+      `;
+
+      // Navigation buttons event handlers
+      document.getElementById('prev-btn').addEventListener('click', () => {
+        const currentNum = parseInt(profileId, 10);
+        if (currentNum > 1) {
+          const prevId = padNumber(currentNum - 1, 5);
+          window.location.href = `profile.html?id=${prevId}`;
+        }
+      });
+
+      document.getElementById('next-btn').addEventListener('click', () => {
+        const currentNum = parseInt(profileId, 10);
+        if (currentNum < users.length) {
+          const nextId = padNumber(currentNum + 1, 5);
+          window.location.href = `profile.html?id=${nextId}`;
+        }
+      });
+
+      // Search user input event
+      document.getElementById('searchUser').addEventListener('keyup', e => {
+        if (e.key === 'Enter') {
+          const val = e.target.value.trim().toLowerCase();
+          if (!val) return;
+          const foundUser = users.find(u => u.username.toLowerCase() === val);
+          if (foundUser) {
+            const foundIndex = users.indexOf(foundUser);
+            window.location.href = `profile.html?id=${padNumber(foundIndex + 1, 5)}`;
+          } else {
+            alert('User not found');
+          }
+        }
+      });
+
+      // Edit house button
+      if (isYou) {
+        document.getElementById('edit-house-btn').addEventListener('click', () => {
+          window.location.href = 'edit-house.html';
+        });
+      }
+
+      // Logout button
+      if (isYou) {
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          localStorage.removeItem('loggedInUser');
+          window.location.href = 'index.html';
+        });
       }
     }
-
-    function saveAndBack() {
-      // Save house style to users array
-      const i = allUsers.findIndex(u => u.username === user.username);
-      if (i !== -1) {
-        allUsers[i] = user;
-        localStorage.setItem('users', JSON.stringify(allUsers));
-        localStorage.setItem('loggedInUser', JSON.stringify(user));
-      }
-      window.location.href = 'profile.html';
-    }
-
-    init();
   </script>
 </body>
 </html>
