@@ -3,127 +3,128 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Island Map</title>
+  <title>Island Map with Icons & User Status</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      background: linear-gradient(to top, #87ceeb, #fff);
+      background: #00a2e8;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 40px 20px;
+      height: 100vh;
+      font-family: Arial, sans-serif;
     }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 10px;
+    .map-container {
+      position: relative;
+      max-width: 800px;
     }
-    .container {
-      max-width: 500px;
+    .map-container img {
       width: 100%;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
+      height: auto;
+      display: block;
     }
-    .form-group {
-      margin: 15px 0;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      background-color: #0077cc;
-      color: white;
+    /* Icon styling */
+    .icon {
+      position: absolute;
+      width: 100px;
+      height: 100px;
       cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 10px;
+      transition: transform 0.2s ease;
     }
-    button:hover {
-      background-color: #005fa3;
+    .icon:hover {
+      transform: scale(1.2);
     }
-    .small {
-      font-size: 0.85rem;
-      color: #555;
+    /* Positions of icons on the island */
+    .icon-profile {
+      top: 70px;
+      left: 110px;
+    }
+    .icon-join {
+      top: 210px;
+      left: 310px;
+    }
+    .icon-shop {
+      top: 90px;
+      left: 560px;
+    }
+    /* Bottom right user status box */
+    #user-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 16px;
+      cursor: default;
+      user-select: none;
+      z-index: 1000;
+      max-width: 250px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>🏝️ Welcome to Island</h1>
-  <div class="container">
-    <div class="form-group">
-      <label for="username">Username:</label>
-      <input type="text" id="username" placeholder="Enter your name" />
-    </div>
-    <div class="form-group">
-      <label for="gender">Gender:</label>
-      <select id="gender">
-        <option value="unknown">Select Gender</option>
-        <option value="female">Female</option>
-        <option value="male">Male</option>
-        <option value="nonbinary">Non-Binary</option>
-      </select>
-    </div>
-    <button onclick="login()">Login / Register</button>
-    <p class="small">New users will be automatically created.</p>
+  <div class="map-container">
+    <img src="island.png" alt="Island Map" />
+
+    <!-- Profile Icon -->
+    <a href="#" class="icon icon-profile" title="Profile" onclick="goToProfile(event)">
+      <img src="icons/profile-icon.png" alt="Profile Icon" />
+    </a>
+
+    <!-- Shop Icon -->
+    <a href="shop.html" class="icon icon-shop" title="Shop">
+      <img src="icons/shop-icon.png" alt="Shop Icon" />
+    </a>
+
+    <!-- Join Game Icon -->
+    <a href="#" class="icon icon-join" title="Join Game" onclick="return joinGamePopup(event);">
+      <img src="icons/join-icon.png" alt="Join Game Icon" />
+    </a>
   </div>
 
+  <!-- Bottom right user status -->
+  <div id="user-status">Loading user info...</div>
+
   <script>
-    function padNumber(num, length) {
-      return num.toString().padStart(length, '0');
-    }
-
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('users')) || [];
-    }
-
-    function saveUsers(users) {
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    function login() {
-      const username = document.getElementById('username').value.trim();
-      const gender = document.getElementById('gender').value;
-
-      if (!username) {
-        alert("Please enter a username.");
-        return;
+    // Show popup for join game icon
+    function joinGamePopup(event) {
+      event.preventDefault();
+      const join = confirm("Would you like to join the game?");
+      if (join) {
+        alert("Welcome to the game! (Replace with actual game launch.)");
       }
-
-      let users = getUsers();
-      let existing = users.find(u => u.username === username);
-
-      if (!existing) {
-        if (gender === 'unknown') {
-          alert("Please select a gender for registration.");
-          return;
-        }
-
-        existing = {
-          username: username,
-          gender: gender,
-          houseBackground: 'house1.png',
-          furniture: [
-            { img: 'furniture/chair1.png', x: 100, y: 400, scale: 1 },
-            { img: 'furniture/tv1.png', x: 400, y: 350, scale: 1 }
-          ]
-        };
-        users.push(existing);
-        saveUsers(users);
-      }
-
-      localStorage.setItem('loggedInUser', JSON.stringify(existing));
-      const id = padNumber(users.findIndex(u => u.username === existing.username) + 1, 5);
-      window.location.href = `profile.html?id=${id}`;
+      return false;
     }
+
+    // Redirect profile icon click to profile or login page
+    function goToProfile(event) {
+      event.preventDefault();
+      const user = JSON.parse(localStorage.getItem('loggedInUser'));
+      if (user && user.username) {
+        window.location.href = 'profile.html';
+      } else {
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Update user status box text
+    function updateUserStatus() {
+      const userStatus = document.getElementById('user-status');
+      const user = JSON.parse(localStorage.getItem('loggedInUser'));
+      if (user && user.username) {
+        userStatus.textContent = Logged in as: ${user.username};
+      } else {
+        userStatus.textContent = 'Not logged in';
+      }
+    }
+    updateUserStatus();
+
+    // Update user status periodically in case login changes elsewhere
+    setInterval(updateUserStatus, 10000);
   </script>
 </body>
 </html>
