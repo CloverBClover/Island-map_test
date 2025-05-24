@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edit House</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: white;
+    }
+    .container {
+      padding: 20px;
+    }
+    .house-preview {
+      position: relative;
+      width: 600px;
+      height: 400px;
+      background-color: #333;
+      margin-bottom: 20px;
+      background-size: cover;
+      border: 2px solid #555;
+    }
+    .furniture {
+      position: absolute;
+      width: 60px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .toolbar button {
+      padding: 10px;
+      background: #555;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+    .toolbar button:hover {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Edit Your House</h1>
+
+    <div class="house-preview" id="housePreview"></div>
+
+    <h3>Choose House Style</h3>
+    <div class="toolbar">
+      <button onclick="setHouse('house1')">House 1</button>
+      <button onclick="setHouse('house2')">House 2</button>
+    </div>
+
+    <h3>Your Furniture</h3>
+    <div class="toolbar" id="furnitureList">
+      <!-- Buttons added by JS -->
+    </div>
+
+    <button onclick="saveAndBack()">Save & Back to Profile</button>
+  </div>
+
+  <script>
+    let user = JSON.parse(localStorage.getItem('loggedInUser'));
+    let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+
+    const preview = document.getElementById('housePreview');
+    const furnitureList = document.getElementById('furnitureList');
+
+    function setHouse(style) {
+      preview.style.backgroundImage = `url('images/${style}.png')`;
+      user.houseStyle = style;
+    }
+
+    function placeFurniture(item) {
+      const img = document.createElement('img');
+      img.src = `images/furniture/${item}.png`;
+      img.className = 'furniture';
+      img.style.top = `${Math.random() * 300}px`;
+      img.style.left = `${Math.random() * 500}px`;
+      preview.appendChild(img);
+    }
+
+    function init() {
+      if (!user) {
+        alert("Not logged in.");
+        window.location.href = 'index.html';
+        return;
+      }
+
+      setHouse(user.houseStyle || 'house1');
+
+      const inventory = user.inventory?.furniture || {};
+      for (const item in inventory) {
+        for (let i = 0; i < inventory[item]; i++) {
+          const btn = document.createElement('button');
+          btn.textContent = `Add ${item}`;
+          btn.onclick = () => placeFurniture(item);
+          furnitureList.appendChild(btn);
+        }
+      }
+    }
+
+    function saveAndBack() {
+      // Save house style to users array
+      const i = allUsers.findIndex(u => u.username === user.username);
+      if (i !== -1) {
+        allUsers[i] = user;
+        localStorage.setItem('users', JSON.stringify(allUsers));
+        localStorage.setItem('loggedInUser', JSON.stringify(user));
+      }
+      window.location.href = 'profile.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>
