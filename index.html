@@ -105,7 +105,9 @@
       event.preventDefault();
       const user = JSON.parse(localStorage.getItem('loggedInUser'));
       if (user && user.username) {
-        window.location.href = 'profile.html';
+        const index = users.findIndex(u => u.username === user.username);
+        const userId = String(index + 1).padStart(5, '0');
+        window.location.href = `profile.html?id=${userId}`;
       } else {
         window.location.href = 'login.html';
       }
