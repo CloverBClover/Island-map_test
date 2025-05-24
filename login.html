@@ -2,96 +2,200 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Login / Create Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login or Sign Up</title>
   <style>
     body {
-      font-family: Arial;
-      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      background: #eef9ff;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
+      margin: 0;
     }
-    .login-box {
+    .container {
       background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      width: 320px;
     }
-    input, select, button {
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    label {
       display: block;
-      margin: 10px 0;
-      padding: 10px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select {
       width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .switch-mode {
+      margin-top: 15px;
+      text-align: center;
+      cursor: pointer;
+      color: #007bff;
+      user-select: none;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <h2>Login or Create Account</h2>
-    <input id="username" placeholder="Username" required />
-    <input id="email" placeholder="Email" required />
-    <input id="password" type="password" placeholder="Password" required />
-    
-    <label>Gender:</label>
-    <select id="gender">
-      <option value="">Select...</option>
-      <option>Male</option>
-      <option>Female</option>
-      <option>Other</option>
-    </select>
-    
-    <button onclick="login()">Login / Create</button>
+  <div class="container">
+    <h2 id="form-title">Login</h2>
+    <form id="auth-form">
+      <label for="username">Username</label>
+      <input type="text" id="username" required />
+
+      <label for="email" id="email-label" style="display:none;">Email</label>
+      <input type="email" id="email" style="display:none;" />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required />
+
+      <label for="gender" id="gender-label" style="display:none;">Gender</label>
+      <select id="gender" style="display:none;">
+        <option value="" selected disabled>Select gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+
+      <button type="submit" id="submit-button">Login</button>
+      <div class="error" id="error-msg"></div>
+    </form>
+    <div class="switch-mode" id="switch-mode">Don't have an account? Sign up</div>
   </div>
 
-  <script>
-    function login() {
-      const username = document.getElementById("username").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const gender = document.getElementById("gender").value;
+<script>
+  let isLogin = true;
 
+  const formTitle = document.getElementById('form-title');
+  const emailLabel = document.getElementById('email-label');
+  const emailInput = document.getElementById('email');
+  const genderLabel = document.getElementById('gender-label');
+  const genderSelect = document.getElementById('gender');
+  const submitButton = document.getElementById('submit-button');
+  const switchMode = document.getElementById('switch-mode');
+  const errorMsg = document.getElementById('error-msg');
+  const authForm = document.getElementById('auth-form');
+
+  function toggleMode() {
+    isLogin = !isLogin;
+    errorMsg.textContent = '';
+
+    if (isLogin) {
+      formTitle.textContent = 'Login';
+      emailLabel.style.display = 'none';
+      emailInput.style.display = 'none';
+      emailInput.required = false;
+      genderLabel.style.display = 'none';
+      genderSelect.style.display = 'none';
+      genderSelect.required = false;
+      submitButton.textContent = 'Login';
+      switchMode.textContent = "Don't have an account? Sign up";
+    } else {
+      formTitle.textContent = 'Sign Up';
+      emailLabel.style.display = 'block';
+      emailInput.style.display = 'block';
+      emailInput.required = true;
+      genderLabel.style.display = 'block';
+      genderSelect.style.display = 'block';
+      genderSelect.required = true;
+      submitButton.textContent = 'Sign Up';
+      switchMode.textContent = 'Already have an account? Login';
+    }
+  }
+
+  switchMode.addEventListener('click', toggleMode);
+
+  function getUsers() {
+    const users = localStorage.getItem('users');
+    return users ? JSON.parse(users) : [];
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  authForm.addEventListener('submit', e => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+
+    const username = document.getElementById('username').value.trim();
+    const email = emailInput.value.trim();
+    const password = document.getElementById('password').value;
+    const gender = genderSelect.value;
+
+    if (isLogin) {
+      const users = getUsers();
+      const user = users.find(u => u.username === username && u.password === password);
+      if (user) {
+        localStorage.setItem('loggedInUser', JSON.stringify(user));
+        window.location.href = `profile.html?id=${user.id}`;
+      } else {
+        errorMsg.textContent = 'Invalid username or password.';
+      }
+    } else {
       if (!username || !email || !password || !gender) {
-        alert("Please fill out all fields.");
+        errorMsg.textContent = 'Please fill in all fields.';
+        return;
+      }
+      const users = getUsers();
+      if (users.find(u => u.username === username)) {
+        errorMsg.textContent = 'Username already exists.';
+        return;
+      }
+      if (users.find(u => u.email === email)) {
+        errorMsg.textContent = 'Email already registered.';
         return;
       }
 
-      let users = JSON.parse(localStorage.getItem("users")) || [];
-      let user = users.find(u => u.username === username);
+      const newUser = {
+        username,
+        email,
+        password,
+        gender,
+        id: String(users.length).padStart(5, '0'),
+        inventory: { furniture: {} },
+        houseStyle: 'house1',
+        furniturePositions: {}
+      };
 
-      if (user) {
-        // Login path
-        if (user.password === password) {
-          localStorage.setItem("loggedInUser", JSON.stringify(user));
-          alert("Logged in!");
-          window.location.href = "profile.html";
-        } else {
-          alert("Incorrect password.");
-        }
-      } else {
-        // Register path
-        const newUser = {
-          username,
-          email,
-          password,
-          gender,
-          id: String(users.length).padStart(5, '0'),
-          inventory: {
-            furniture: {
-              chair1: 1,
-              tv1: 1
-            }
-          },
-          houseStyle: "house1"
-        };
-
-        users.push(newUser);
-        localStorage.setItem("users", JSON.stringify(users));
-        localStorage.setItem("loggedInUser", JSON.stringify(newUser));
-        alert("Account created and logged in!");
-        window.location.href = "profile.html";
-      }
+      users.push(newUser);
+      saveUsers(users);
+      localStorage.setItem('loggedInUser', JSON.stringify(newUser));
+      window.location.href = `profile.html?id=${newUser.id}`;
     }
-  </script>
+  });
+
+  toggleMode();
+</script>
 </body>
 </html>
