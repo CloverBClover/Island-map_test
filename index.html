@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Island Map</title>
+  <title>Island Map with Icons</title>
   <style>
     body {
       margin: 0;
@@ -15,40 +15,65 @@
     }
     .map-container {
       position: relative;
+      max-width: 800px;
     }
     .map-container img {
-      max-width: 100%;
+      width: 100%;
       height: auto;
       display: block;
     }
-    area:hover {
+    /* Icon styling */
+    .icon {
+      position: absolute;
+      width: 40px;
+      height: 40px;
       cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .icon:hover {
+      transform: scale(1.2);
+    }
+    /* Positions of icons on the island (adjust as needed) */
+    .icon-profile {
+      top: 70px;
+      left: 90px;
+    }
+    .icon-shop {
+      top: 290px;
+      left: 280px;
+    }
+    .icon-join {
+      top: 150px;
+      left: 430px;
     }
   </style>
 </head>
 <body>
   <div class="map-container">
-    <img src="island.png" alt="Island Map" usemap="#islandmap" />
-    <map name="islandmap">
-      <!-- Profile area -->
-      <area shape="rect" coords="50,50,150,150" href="profile.html" alt="Profile" />
+    <img src="island.png" alt="Island Map" />
 
-      <!-- Shop area -->
-      <area shape="circle" coords="300,300,75" href="shop.html" alt="Shop" />
+    <!-- Profile Icon -->
+    <a href="profile.html" class="icon icon-profile" title="Profile">
+      <img src="icons/profile-icon.png" alt="Profile Icon" />
+    </a>
 
-      <!-- Popup area -->
-      <area shape="poly" coords="400,100,500,120,480,200,380,180" href="#" alt="Join Game" onclick="return joinGamePopup(event);" />
-    </map>
+    <!-- Shop Icon -->
+    <a href="shop.html" class="icon icon-shop" title="Shop">
+      <img src="icons/shop-icon.png" alt="Shop Icon" />
+    </a>
+
+    <!-- Join Game Icon -->
+    <a href="#" class="icon icon-join" title="Join Game" onclick="return joinGamePopup(event);">
+      <img src="icons/join-icon.png" alt="Join Game Icon" />
+    </a>
   </div>
 
   <script>
     function joinGamePopup(event) {
-      event.preventDefault(); // Prevent the default link behavior
+      event.preventDefault();
       const join = confirm("Would you like to join the game?");
       if (join) {
-        alert("Welcome to the game! (You can replace this with actual game loading code.)");
-        // Here you can redirect or load the game
-        // window.location.href = "game.html";
+        alert("Welcome to the game! (Replace with actual game launch.)");
       }
       return false;
     }
