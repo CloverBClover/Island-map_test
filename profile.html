@@ -2,195 +2,204 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Profile</title>
   <style>
-    body {
-      margin: 0;
+    body, html {
+      margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
+      background: #121212;
       color: white;
-      background-color: black;
-      background-size: cover;
-      background-position: center;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .info-box {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 20px;
-      border-radius: 10px;
+    .profile-bg {
+      position: relative;
+      width: 360px;
+      height: 560px;
+      background: url('house.png') center center no-repeat;
+      background-size: cover;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.7);
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-width: 300px;
-      z-index: 10;
+      justify-content: flex-start;
+      padding: 24px;
+      box-sizing: border-box;
     }
-    .info-box h2, .info-box p {
-      margin: 0;
-    }
-    .buttons {
+    .info-box {
+      background: rgba(0, 0, 0, 0.75);
+      border-radius: 10px;
+      padding: 20px;
+      flex-grow: 1;
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    .buttons button {
-      padding: 10px;
-      background: #00aaff;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      flex: 1 1 auto;
-      min-width: 100px;
-      white-space: nowrap;
-      text-align: center;
-    }
-    .buttons button:hover {
-      background: #0077aa;
-    }
-    .logout {
-      background: red !important;
-      flex: 1 1 auto;
-      min-width: 100px;
-    }
-    .furniture-item {
-      position: absolute;
-      width: 80px;
-      height: auto;
+      flex-direction: column;
       user-select: none;
-      pointer-events: none;
+    }
+    .info-box h2 {
+      margin: 0 0 12px 0;
+      font-weight: 700;
+      font-size: 26px;
+      text-align: center;
+      letter-spacing: 1.1px;
+    }
+    .info-field {
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .label {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .nav-buttons {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .nav-buttons button, .action-buttons button {
+      flex: 1;
+      background: #0077cc;
+      color: white;
+      border: none;
+      padding: 12px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .nav-buttons button:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+    .nav-buttons button:hover:not(:disabled) {
+      background: #005fa3;
+    }
+    .action-buttons {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+    }
+    .logout-btn {
+      background: #ff4c4c;
+    }
+    .logout-btn:hover {
+      background: #cc0000;
+    }
+    .back-island-btn {
+      background: #28a745;
+    }
+    .back-island-btn:hover {
+      background: #1e7e34;
+    }
+    .house-preview {
+      margin-top: 16px;
+      height: 140px;
+      border-radius: 8px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
     }
   </style>
 </head>
 <body>
-  <div class="info-box" id="infoBox"></div>
+  <div class="profile-bg">
+    <div class="info-box" id="info-box">
+      <!-- Filled by JS -->
+    </div>
+  </div>
 
   <script>
-    // Helper to pad numbers
     function padNumber(num, length) {
       return num.toString().padStart(length, '0');
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const profileId = urlParams.get("id");
-
-    let allUsers = JSON.parse(localStorage.getItem("users")) || [];
-    let loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    let viewingUser = loggedInUser;
-
-    if (profileId) {
-      const found = allUsers.find(u => u.id === profileId);
-      if (found) viewingUser = found;
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('users')) || [];
     }
 
-    if (!viewingUser) {
-      alert("No user found.");
-      window.location.href = "index.html";
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    const users = getUsers();
+
+    // Get profile ID from URL (always 5 digit string)
+    const params = new URLSearchParams(window.location.search);
+    let profileId = params.get('id');
+
+    // Ensure profileId always set, fallback to logged-in user ID
+    if (!profileId) {
+      if (loggedInUser && loggedInUser.id) {
+        profileId = loggedInUser.id;
+        // Update URL without reload to keep consistent URL
+        history.replaceState(null, '', `profile.html?id=${profileId}`);
+      } else {
+        // No ID and no logged-in user
+        profileId = null;
+      }
     }
 
-    // Fallbacks
-    if (!viewingUser.id) viewingUser.id = padNumber(allUsers.length, 5);
-    if (!viewingUser.houseStyle) viewingUser.houseStyle = "house1";
-    if (!viewingUser.inventory) viewingUser.inventory = { furniture: {} };
-    if (!viewingUser.placedFurniture) viewingUser.placedFurniture = {};
-
-    // Sync loggedInUser if this is their profile
-    if (viewingUser.username === loggedInUser?.username) {
-      localStorage.setItem("loggedInUser", JSON.stringify(viewingUser));
-      allUsers = allUsers.map(u => u.username === viewingUser.username ? viewingUser : u);
-      localStorage.setItem("users", JSON.stringify(allUsers));
+    // Find user by profileId (user.id should be 5-digit string)
+    function userById(id) {
+      if (!id) return null;
+      return users.find(u => u.id === id) || null;
     }
 
-    // Set background to user's house style
-    document.body.style.backgroundImage = `url('images/${viewingUser.houseStyle}.png')`;
+    const profileUser = userById(profileId);
+    const infoBox = document.getElementById('info-box');
 
-    const isOwner = viewingUser.username === loggedInUser?.username;
-    const infoBox = document.getElementById("infoBox");
-    const currentIndex = allUsers.findIndex(u => u.id === viewingUser.id);
+    if (!profileUser) {
+      infoBox.innerHTML = `<h2>Profile not found</h2><p>This user does not exist.</p>`;
+    } else {
+      const isYou = loggedInUser && loggedInUser.username === profileUser.username;
+      const currentIndex = users.findIndex(u => u.id === profileUser.id);
+      const prevUser = users[currentIndex - 1] || null;
+      const nextUser = users[currentIndex + 1] || null;
 
-    // Compose buttons HTML
-    let buttonsHtml = `
-      <button onclick="window.location.href='index.html'">🌽 Back to Island</button>
-      <button onclick="viewPrevious()" ${currentIndex <= 0 ? 'disabled' : ''}>⬅ Prev</button>
-      <button onclick="viewNext()" ${currentIndex >= allUsers.length - 1 ? 'disabled' : ''}>Next ➡</button>
-    `;
+      // House preview background (match edit-house styles)
+      const housePreviewStyle = profileUser.houseStyle ? `background-image: url('images/${profileUser.houseStyle}.png')` : '';
 
-    if (isOwner) {
-      buttonsHtml = `
-        <button onclick="window.location.href='index.html'">🌽 Back to Island</button>
-        <button onclick="window.location.href='edit-house.html'">🏠 Edit House</button>
-        <button class="logout" onclick="logout()">🚪 Log Out</button>
-        <button onclick="viewPrevious()" ${currentIndex <= 0 ? 'disabled' : ''}>⬅ Prev</button>
-        <button onclick="viewNext()" ${currentIndex >= allUsers.length - 1 ? 'disabled' : ''}>Next ➡</button>
+      infoBox.innerHTML = `
+        <h2>${profileUser.username}</h2>
+        <div class="info-field"><span class="label">Gender:</span> ${profileUser.gender || 'Unknown'}</div>
+        <div class="info-field"><span class="label">Profile ID:</span> ${profileUser.id}</div>
+        <div class="info-field"><span class="label">Viewing:</span> ${isYou ? 'Your Profile' : 'Other User'}</div>
+
+        <div class="house-preview" style="${housePreviewStyle}"></div>
+
+        <div class="nav-buttons">
+          <button id="prev-btn" ${!prevUser ? 'disabled' : ''}>⬅ Prev</button>
+          <button id="next-btn" ${!nextUser ? 'disabled' : ''}>Next ➡</button>
+        </div>
+
+        <div class="action-buttons">
+          ${isYou ? '<button class="logout-btn" id="logout-btn">Log Out</button>' : ''}
+          <button class="back-island-btn" id="back-island-btn">Back to Island</button>
+        </div>
       `;
-    }
 
-    infoBox.innerHTML = `
-      <h2>${viewingUser.username}</h2>
-      <p>Gender: ${viewingUser.gender || 'Unknown'}</p>
-      <p>Profile ID: ${viewingUser.id}</p>
-      <p>${isOwner ? "This is your profile." : "You are viewing someone else's profile."}</p>
-      <div class="buttons">${buttonsHtml}</div>
-    `;
-
-    // Navigation functions
-    function viewPrevious() {
-      if (currentIndex > 0) {
-        const prevUser = allUsers[currentIndex - 1];
-        window.location.href = `profile.html?id=${prevUser.id}`;
+      // Button handlers
+      if (prevUser) {
+        document.getElementById('prev-btn').addEventListener('click', () => {
+          window.location.href = `profile.html?id=${prevUser.id}`;
+        });
       }
-    }
-    function viewNext() {
-      if (currentIndex < allUsers.length - 1) {
-        const nextUser = allUsers[currentIndex + 1];
-        window.location.href = `profile.html?id=${nextUser.id}`;
+      if (nextUser) {
+        document.getElementById('next-btn').addEventListener('click', () => {
+          window.location.href = `profile.html?id=${nextUser.id}`;
+        });
       }
-    }
-
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      window.location.href = "index.html";
-    }
-
-    // Show placed furniture visually on the house
-    // We'll place furniture items randomly inside a safe area to simulate placement
-    // You can later store exact positions in user.placedFurniturePositions for better accuracy
-
-    function placeFurnitureVisuals() {
-      const placed = viewingUser.placedFurniture || {};
-      const furnitureTypes = Object.keys(placed);
-      furnitureTypes.forEach(furn => {
-        const count = placed[furn];
-        for (let i = 0; i < count; i++) {
-          const img = document.createElement('img');
-          img.src = `images/furniture/${furn}.png`;
-          img.alt = furn;
-          img.className = 'furniture-item';
-
-          // Random position inside approx 70% of viewport width/height
-          // Positioned so items don't overflow edges
-          const maxX = window.innerWidth * 0.7;
-          const maxY = window.innerHeight * 0.7;
-
-          // Spread furniture a bit so they don't overlap fully
-          // You could improve this with saved positions
-          const left = Math.random() * maxX + window.innerWidth * 0.1;
-          const top = Math.random() * maxY + window.innerHeight * 0.1;
-
-          img.style.left = `${left}px`;
-          img.style.top = `${top}px`;
-
-          document.body.appendChild(img);
-        }
+      if (isYou) {
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          localStorage.removeItem('loggedInUser');
+          window.location.href = 'index.html';
+        });
+      }
+      document.getElementById('back-island-btn').addEventListener('click', () => {
+        window.location.href = 'island.html';
       });
     }
-
-    placeFurnitureVisuals();
   </script>
 </body>
 </html>
