@@ -21,17 +21,21 @@
       background: rgba(0, 0, 0, 0.6);
       padding: 20px;
       border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .info-box h2, .info-box p {
-      margin: 5px 0;
+      margin: 0;
     }
     .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       margin-top: 10px;
     }
-    .buttons button, .buttons select {
+    .buttons button, .buttons input {
       padding: 10px;
-      margin-top: 5px;
-      margin-right: 10px;
       background: #00aaff;
       border: none;
       border-radius: 5px;
@@ -42,17 +46,14 @@
     .buttons button:hover {
       background: #0077aa;
     }
+    .logout {
+      background: red !important;
+    }
     .furniture-item {
       position: absolute;
-      width: 60px;
-    }
-    .tv1 {
-      bottom: 30px;
-      left: 30px;
-    }
-    .chair1 {
-      bottom: 30px;
-      right: 30px;
+      width: 360px;
+      height: auto;
+      cursor: move;
     }
   </style>
 </head>
@@ -61,14 +62,14 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const profileUsername = urlParams.get("user");
+    const profileId = urlParams.get("id");
 
     let allUsers = JSON.parse(localStorage.getItem("users")) || [];
     let loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
     let viewingUser = loggedInUser;
 
-    if (profileUsername && profileUsername !== loggedInUser?.username) {
-      const found = allUsers.find(u => u.username === profileUsername);
+    if (profileId) {
+      const found = allUsers.find(u => u.id === profileId);
       if (found) viewingUser = found;
     }
 
@@ -77,50 +78,60 @@
       window.location.href = "index.html";
     }
 
-    // Add defaults if missing
-    if (!viewingUser.houseStyle) viewingUser.houseStyle = "house1";
-    if (!viewingUser.inventory || !viewingUser.inventory.furniture) {
-      viewingUser.inventory = {
-        furniture: {
-          chair1: 1,
-          tv1: 1
-        }
-      };
+    if (!viewingUser.id) {
+      viewingUser.id = String(allUsers.length).padStart(5, '0');
     }
 
-    // Save updates
+    if (!viewingUser.houseStyle) viewingUser.houseStyle = "house1";
+    if (!viewingUser.inventory) viewingUser.inventory = { furniture: {} };
+    if (!viewingUser.furniturePositions) viewingUser.furniturePositions = {};
+
     if (viewingUser.username === loggedInUser?.username) {
       localStorage.setItem("loggedInUser", JSON.stringify(viewingUser));
       allUsers = allUsers.map(u => u.username === viewingUser.username ? viewingUser : u);
       localStorage.setItem("users", JSON.stringify(allUsers));
     }
 
-    // Set background image
     document.body.style.backgroundImage = `url('images/${viewingUser.houseStyle}.png')`;
 
     const isOwner = viewingUser.username === loggedInUser?.username;
     const infoBox = document.getElementById("infoBox");
 
+    let currentIndex = allUsers.findIndex(u => u.id === viewingUser.id);
+
     infoBox.innerHTML = `
       <h2>${viewingUser.username}</h2>
       <p>Gender: ${viewingUser.gender}</p>
-      <p>Profile ID: ${viewingUser.id || "00000"}</p>
+      <p>Profile ID: ${viewingUser.id}</p>
       <p>${isOwner ? "This is your profile." : "You are viewing someone else's profile."}</p>
       <div class="buttons">
-        <button onclick="window.location.href='index.html'">🏝 Back to Island</button>
-        ${isOwner ? `<button onclick="window.location.href='edit-house.html'">🏠 Edit House</button>` : ""}
-        ${isOwner ? `<button onclick="logout()">🚪 Log Out</button>` : ""}
-        <select onchange="viewAnotherProfile(this)">
-          <option value="">View Another Profile</option>
-          ${allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join("")}
-        </select>
+        <button onclick="window.location.href='index.html'">🌽 Back to Island</button>
+        ${isOwner ? `<button onclick=\"window.location.href='edit-house.html'\">\ud83c\udfe1 Edit House</button>` : ""}
+        ${isOwner ? `<button class='logout' onclick=\"logout()\">\ud83d\udeaa Log Out</button>` : ""}
+        <button onclick="viewPrevious()">Previous Profile</button>
+        <button onclick="viewNext()">Next Profile</button>
+        <input type="text" id="searchUser" placeholder="Search Username" onkeyup="searchUser(this.value)">
       </div>
     `;
 
-    function viewAnotherProfile(select) {
-      const user = select.value;
-      if (user) {
-        window.location.href = `profile.html?user=${user}`;
+    function viewPrevious() {
+      if (currentIndex > 0) {
+        const prevUser = allUsers[currentIndex - 1];
+        window.location.href = `profile.html?id=${prevUser.id}`;
+      }
+    }
+
+    function viewNext() {
+      if (currentIndex < allUsers.length - 1) {
+        const nextUser = allUsers[currentIndex + 1];
+        window.location.href = `profile.html?id=${nextUser.id}`;
+      }
+    }
+
+    function searchUser(val) {
+      const match = allUsers.find(u => u.username.toLowerCase() === val.toLowerCase());
+      if (match) {
+        window.location.href = `profile.html?id=${match.id}`;
       }
     }
 
@@ -129,16 +140,17 @@
       window.location.href = "index.html";
     }
 
-    // Optional: Render furniture
-    if (viewingUser.inventory && viewingUser.inventory.furniture) {
-      for (const [item, count] of Object.entries(viewingUser.inventory.furniture)) {
-        for (let i = 0; i < count; i++) {
+    if (viewingUser.furniturePositions) {
+      Object.entries(viewingUser.furniturePositions).forEach(([item, positions]) => {
+        positions.forEach(pos => {
           const img = document.createElement("img");
           img.src = `images/furniture/${item}.png`;
-          img.className = `furniture-item ${item}`;
+          img.className = `furniture-item`;
+          img.style.left = pos.x + 'px';
+          img.style.top = pos.y + 'px';
           document.body.appendChild(img);
-        }
-      }
+        });
+      });
     }
   </script>
 </body>
