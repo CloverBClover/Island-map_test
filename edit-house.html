@@ -2,233 +2,232 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Edit House</title>
   <style>
-    body {
+    body, html {
+      margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+      background-color: black;
+      overflow: hidden;
     }
-    h1 {
-      margin-bottom: 10px;
-    }
-    #inventory, #placed {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      width: 320px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    #inventory h2, #placed h2 {
-      margin-top: 0;
+    #house-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
     }
     .furniture-item {
-      display: flex;
-      justify-content: space-between;
-      margin: 6px 0;
+      position: absolute;
+      width: 80px;
+      height: auto;
+      cursor: move;
+      user-select: none;
+      transition: box-shadow 0.2s;
     }
-    button.place-btn {
-      margin-left: 8px;
-      padding: 4px 10px;
-      cursor: pointer;
+    .furniture-item.dragging {
+      box-shadow: 0 0 10px 3px #00aaff;
+      opacity: 0.8;
+    }
+    #furniture-list {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.7);
+      padding: 15px;
+      border-radius: 10px;
+      color: white;
+      max-width: 200px;
+      font-size: 14px;
+      z-index: 1000;
+    }
+    #furniture-list button {
+      margin-top: 8px;
+      padding: 8px;
+      width: 100%;
       background: #0077cc;
       border: none;
-      color: white;
       border-radius: 5px;
+      color: white;
+      cursor: pointer;
       font-weight: bold;
-      transition: background 0.3s ease;
     }
-    button.place-btn:disabled {
-      background: #aaa;
+    #furniture-list button:disabled {
+      background: #444;
       cursor: not-allowed;
-    }
-    .placed-item {
-      display: flex;
-      justify-content: space-between;
-      margin: 6px 0;
-    }
-    button.remove-btn {
-      background: #cc4444;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      padding: 3px 8px;
-      font-weight: bold;
-      transition: background 0.3s ease;
-    }
-    button.remove-btn:hover {
-      background: #aa0000;
-    }
-    #back-btn {
-      padding: 10px 20px;
-      background: #555;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s ease;
-    }
-    #back-btn:hover {
-      background: #333;
     }
   </style>
 </head>
 <body>
-  <h1>Edit Your House</h1>
-
-  <div id="inventory">
-    <h2>Furniture Inventory</h2>
-    <!-- Inventory items will be populated here -->
+  <div id="house-container"></div>
+  <div id="furniture-list">
+    <h3>Your Furniture</h3>
+    <!-- Furniture buttons populated here -->
   </div>
 
-  <div id="placed">
-    <h2>Placed Furniture</h2>
-    <!-- Placed furniture will be listed here -->
-  </div>
+<script>
+  const houseContainer = document.getElementById('house-container');
+  const furnitureListDiv = document.getElementById('furniture-list');
 
-  <button id="back-btn">Back to Profile</button>
+  // Load logged in user
+  let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+  if (!loggedInUser) {
+    alert("You must be logged in to edit your house.");
+    window.location.href = "index.html";
+  }
 
-  <script>
-    // Helper: pad numbers with leading zeros
-    function padNumber(num, length) {
-      return num.toString().padStart(length, '0');
+  // Set house background
+  houseContainer.style.backgroundImage = `url('images/${loggedInUser.houseStyle || "house1"}.png')`;
+
+  // Ensure placedFurniture and furniturePositions exist
+  loggedInUser.placedFurniture = loggedInUser.placedFurniture || {};
+  loggedInUser.furniturePositions = loggedInUser.furniturePositions || {};
+
+  // For drag & drop tracking
+  let dragItem = null;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  // Save changes to localStorage (both loggedInUser and allUsers)
+  function saveUserData() {
+    localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+    let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+    allUsers = allUsers.map(u => u.username === loggedInUser.username ? loggedInUser : u);
+    localStorage.setItem('users', JSON.stringify(allUsers));
+  }
+
+  // Create furniture buttons in panel
+  function createFurnitureButtons() {
+    furnitureListDiv.innerHTML = '<h3>Your Furniture</h3>';
+    const inventory = loggedInUser.inventory?.furniture || {};
+    for (const furn in inventory) {
+      const ownedCount = inventory[furn];
+      const placedCount = loggedInUser.placedFurniture[furn] || 0;
+      const availableCount = ownedCount - placedCount;
+
+      const btn = document.createElement('button');
+      btn.textContent = `${furn} (${availableCount} available)`;
+      btn.disabled = availableCount <= 0;
+
+      btn.addEventListener('click', () => {
+        placeFurniture(furn);
+      });
+      furnitureListDiv.appendChild(btn);
+    }
+  }
+
+  // Place furniture visually and update counts
+  function placeFurniture(furnName, x = 50, y = 50) {
+    const inventoryCount = loggedInUser.inventory?.furniture[furnName] || 0;
+    const placedCount = loggedInUser.placedFurniture[furnName] || 0;
+
+    if (placedCount >= inventoryCount) {
+      alert(`You cannot place more ${furnName} than you own!`);
+      return;
     }
 
-    // Get logged in user data from localStorage
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    if (!loggedInUser || !loggedInUser.username) {
-      alert("You must be logged in to edit your house.");
-      window.location.href = "index.html";
+    // Create image element
+    const img = document.createElement('img');
+    img.src = `images/furniture/${furnName}.png`;
+    img.className = 'furniture-item';
+    img.style.left = x + 'px';
+    img.style.top = y + 'px';
+    img.draggable = false; // We'll handle dragging manually
+
+    // Store furniture name on element dataset for easy reference
+    img.dataset.furnName = furnName;
+
+    // Add event listeners for drag & drop
+    img.addEventListener('mousedown', dragStart);
+    document.addEventListener('mouseup', dragEnd);
+    document.addEventListener('mousemove', dragMove);
+
+    houseContainer.appendChild(img);
+
+    // Update counts
+    loggedInUser.placedFurniture[furnName] = placedCount + 1;
+    // Store position in furniturePositions for this furniture piece
+    // We'll use an array for positions of each furniture type
+    loggedInUser.furniturePositions[furnName] = loggedInUser.furniturePositions[furnName] || [];
+    loggedInUser.furniturePositions[furnName].push({ x, y });
+
+    saveUserData();
+    createFurnitureButtons();
+  }
+
+  // Render all placed furniture from positions saved
+  function renderPlacedFurniture() {
+    houseContainer.querySelectorAll('.furniture-item').forEach(el => el.remove());
+
+    for (const furn in loggedInUser.furniturePositions) {
+      const positions = loggedInUser.furniturePositions[furn];
+      positions.forEach(pos => {
+        const img = document.createElement('img');
+        img.src = `images/furniture/${furn}.png`;
+        img.className = 'furniture-item';
+        img.style.left = pos.x + 'px';
+        img.style.top = pos.y + 'px';
+        img.draggable = false;
+        img.dataset.furnName = furn;
+
+        img.addEventListener('mousedown', dragStart);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('mousemove', dragMove);
+
+        houseContainer.appendChild(img);
+      });
     }
+  }
 
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const userIndex = users.findIndex(u => u.username === loggedInUser.username);
-    if (userIndex === -1) {
-      alert("User not found.");
-      window.location.href = "index.html";
+  // Drag & Drop handlers
+  function dragStart(e) {
+    if (e.target.classList.contains('furniture-item')) {
+      dragItem = e.target;
+      offsetX = e.clientX - dragItem.offsetLeft;
+      offsetY = e.clientY - dragItem.offsetTop;
+      dragItem.classList.add('dragging');
     }
-    const user = users[userIndex];
+  }
 
-    // Ensure user has inventory object, if not create empty furniture inventory
-    if (!user.inventory) user.inventory = {};
-    if (!user.inventory.furniture) user.inventory.furniture = {};
+  function dragMove(e) {
+    if (dragItem) {
+      let x = e.clientX - offsetX;
+      let y = e.clientY - offsetY;
 
-    // Initialize placedFurniture object (furniture name => count)
-    if (!user.placedFurniture) user.placedFurniture = {};
+      // Limit drag within house container bounds
+      x = Math.max(0, Math.min(x, houseContainer.clientWidth - dragItem.clientWidth));
+      y = Math.max(0, Math.min(y, houseContainer.clientHeight - dragItem.clientHeight));
 
-    // DOM refs
-    const inventoryDiv = document.getElementById('inventory');
-    const placedDiv = document.getElementById('placed');
-    const backBtn = document.getElementById('back-btn');
+      dragItem.style.left = x + 'px';
+      dragItem.style.top = y + 'px';
+    }
+  }
 
-    // Update UI for inventory and placed furniture
-    function render() {
-      // Clear existing
-      inventoryDiv.innerHTML = '<h2>Furniture Inventory</h2>';
-      placedDiv.innerHTML = '<h2>Placed Furniture</h2>';
+  function dragEnd(e) {
+    if (dragItem) {
+      dragItem.classList.remove('dragging');
 
-      // List inventory items with place buttons
-      const furnitureKeys = Object.keys(user.inventory.furniture);
-      if (furnitureKeys.length === 0) {
-        inventoryDiv.innerHTML += '<p>No furniture in inventory.</p>';
-      } else {
-        furnitureKeys.forEach(furn => {
-          const totalOwned = user.inventory.furniture[furn] || 0;
-          const placedCount = user.placedFurniture[furn] || 0;
-          const available = totalOwned - placedCount;
+      // Update stored position in furniturePositions array
+      const furnName = dragItem.dataset.furnName;
+      const left = parseInt(dragItem.style.left, 10);
+      const top = parseInt(dragItem.style.top, 10);
 
-          const itemDiv = document.createElement('div');
-          itemDiv.className = 'furniture-item';
-
-          const label = document.createElement('span');
-          label.textContent = `${furn} (Owned: ${totalOwned}, Available: ${available})`;
-
-          const btn = document.createElement('button');
-          btn.className = 'place-btn';
-          btn.textContent = 'Place';
-          btn.disabled = available <= 0;
-          btn.onclick = () => {
-            placeFurniture(furn);
-          };
-
-          itemDiv.appendChild(label);
-          itemDiv.appendChild(btn);
-          inventoryDiv.appendChild(itemDiv);
-        });
+      // Find the matching furniture position entry and update it
+      // Because we add furniture in order, the element index corresponds to index in array
+      const images = [...houseContainer.querySelectorAll(`.furniture-item[data-furn-name="${furnName}"]`)];
+      const idx = images.indexOf(dragItem);
+      if (idx !== -1 && loggedInUser.furniturePositions[furnName]) {
+        loggedInUser.furniturePositions[furnName][idx] = { x: left, y: top };
+        saveUserData();
       }
 
-      // List placed furniture with remove buttons
-      const placedKeys = Object.keys(user.placedFurniture);
-      if (placedKeys.length === 0) {
-        placedDiv.innerHTML += '<p>No furniture placed.</p>';
-      } else {
-        placedKeys.forEach(furn => {
-          const count = user.placedFurniture[furn];
-          if (count > 0) {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'placed-item';
-
-            const label = document.createElement('span');
-            label.textContent = `${furn}: ${count}`;
-
-            const btn = document.createElement('button');
-            btn.className = 'remove-btn';
-            btn.textContent = 'Remove';
-            btn.onclick = () => {
-              removeFurniture(furn);
-            };
-
-            itemDiv.appendChild(label);
-            itemDiv.appendChild(btn);
-            placedDiv.appendChild(itemDiv);
-          }
-        });
-      }
+      dragItem = null;
     }
+  }
 
-    function placeFurniture(furn) {
-      const totalOwned = user.inventory.furniture[furn] || 0;
-      const placedCount = user.placedFurniture[furn] || 0;
-      if (placedCount < totalOwned) {
-        user.placedFurniture[furn] = placedCount + 1;
-        saveUser();
-        render();
-      } else {
-        alert(`You cannot place more ${furn} than you own.`);
-      }
-    }
-
-    function removeFurniture(furn) {
-      const placedCount = user.placedFurniture[furn] || 0;
-      if (placedCount > 0) {
-        user.placedFurniture[furn] = placedCount - 1;
-        saveUser();
-        render();
-      }
-    }
-
-    function saveUser() {
-      users[userIndex] = user;
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    backBtn.addEventListener('click', () => {
-      // Redirect back to your profile page (with correct ID)
-      const profileId = padNumber(userIndex + 1, 5);
-      window.location.href = `profile.html?id=${profileId}`;
-    });
-
-    // Initial render
-    render();
-  </script>
+  createFurnitureButtons();
+  renderPlacedFurniture();
+</script>
 </body>
 </html>
