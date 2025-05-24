@@ -100,19 +100,16 @@
       return false;
     }
 
-
-  // When user clicks Profile button
-  function goToProfile() {
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    if (loggedInUser && loggedInUser.id) {
-      window.location.href = `profile.html?id=${loggedInUser.id}`;
-    } else {
-      alert("No user logged in.");
+    // Redirect profile icon click to profile or login page
+    function goToProfile(event) {
+      event.preventDefault();
+      const user = JSON.parse(localStorage.getItem('loggedInUser'));
+      if (user && user.username) {
+        window.location.href = 'profile.html';
+      } else {
+        window.location.href = 'login.html';
+      }
     }
-  }
-
-
-<button onclick="goToProfile()">Profile</button>
 
     // Update user status box text
     function updateUserStatus() {
