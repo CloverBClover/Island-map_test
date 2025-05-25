@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Island Map with Icons & User Status</title>
+  <title>Island Map with Icons</title>
   <style>
     body {
       margin: 0;
@@ -12,7 +12,6 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      font-family: Arial, sans-serif;
     }
     .map-container {
       position: relative;
@@ -34,35 +33,22 @@
     .icon:hover {
       transform: scale(1.2);
     }
-    /* Positions of icons on the island */
+    /* Positions of icons on the island (adjust as needed) */
     .icon-profile {
       top: 70px;
       left: 110px;
     }
     .icon-join {
-      top: 210px;
+      top: 290px;
+      left: 280px;
+      top: 110px;
       left: 310px;
     }
     .icon-shop {
       top: 90px;
+      left: 890px;
+      top: 70px;
       left: 560px;
-    }
-    /* Bottom right user status box */
-    #user-status {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-family: sans-serif;
-      font-size: 16px;
-      cursor: default;
-      user-select: none;
-      z-index: 1000;
-      max-width: 250px;
-      text-align: center;
     }
   </style>
 </head>
@@ -71,7 +57,7 @@
     <img src="island.png" alt="Island Map" />
 
     <!-- Profile Icon -->
-    <a href="#" class="icon icon-profile" title="Profile" onclick="goToProfile(event)">
+    <a href="profile.html" class="icon icon-profile" title="Profile">
       <img src="icons/profile-icon.png" alt="Profile Icon" />
     </a>
 
@@ -86,11 +72,7 @@
     </a>
   </div>
 
-  <!-- Bottom right user status -->
-  <div id="user-status">Loading user info...</div>
-
   <script>
-    // Show popup for join game icon
     function joinGamePopup(event) {
       event.preventDefault();
       const join = confirm("Would you like to join the game?");
@@ -99,44 +81,6 @@
       }
       return false;
     }
-
-    // Redirect profile icon click to profile or login page
-    function goToProfile(event) {
-      event.preventDefault();
-      const user = JSON.parse(localStorage.getItem('loggedInUser'));
-      if (user && user.username) {
-        window.location.href = 'profile.html';
-      } else {
-        window.location.href = 'login.html';
-      }
-
-  // When user clicks Profile button
-  function goToProfile() {
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    if (loggedInUser && loggedInUser.id) {
-      window.location.href = `profile.html?id=${loggedInUser.id}`;
-    } else {
-      alert("No user logged in.");
-    }
-  }
-
-
-<button onclick="goToProfile()">Profile</button>
-
-    // Update user status box text
-    function updateUserStatus() {
-      const userStatus = document.getElementById('user-status');
-      const user = JSON.parse(localStorage.getItem('loggedInUser'));
-      if (user && user.username) {
-        userStatus.textContent = `Logged in as: ${user.username}`;
-      } else {
-        userStatus.textContent = 'Not logged in';
-      }
-    }
-    updateUserStatus();
-
-    // Update user status periodically in case login changes elsewhere
-    setInterval(updateUserStatus, 10000);
   </script>
 </body>
 </html>
